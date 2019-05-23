@@ -16,9 +16,13 @@ namespace util {
   }
 }
 
+// #define BR(branch)                                        \
+//   THIS_CHAIN.SetBranchStatus(#branch, true);              \
+//   THIS_CHAIN.SetBranchAddress(#branch, &THIS_DATA.branch)
+
 #define BR(branch)                                        \
-  THIS_CHAIN.SetBranchStatus(#branch, true);              \
-  THIS_CHAIN.SetBranchAddress(#branch, &THIS_DATA.branch)
+  chains[0].SetBranchStatus(#branch, true);              \
+  chains[0].SetBranchAddress(#branch, &data.branch)
 
 class Pipeline;
 
@@ -28,7 +32,7 @@ public:
 
   virtual ~Algorithm() { };
 
-  virtual void initialize(const Pipeline& pipeline,
+  virtual void initialize(Pipeline& pipeline,
                           const std::vector<std::string>& inFiles) { };
   virtual Status execute() = 0;
   virtual void finalize() { };
@@ -41,7 +45,7 @@ public:
   TFile* getOutFile(const char* name);
 
   template <class Alg>
-  Alg* getAlg(const char* name);
+  Alg& getAlg(const char* name);
 
   void process(const std::vector<std::string>& inFiles);
 
@@ -68,9 +72,9 @@ TFile* Pipeline::getOutFile(const char* name)
 }
 
 template <class Alg>
-Alg* Pipeline::getAlg(const char* name)
+Alg& Pipeline::getAlg(const char* name)
 {
-  return dynamic_cast<Alg*>(algMap[name]);
+  return *dynamic_cast<Alg*>(algMap[name]);
 }
 
 void Pipeline::process(const std::vector<std::string>& inFiles)
