@@ -1,4 +1,5 @@
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -50,14 +51,14 @@ public:
   void process(const std::vector<std::string>& inFiles);
 
 private:
-  std::vector<Algorithm*> algVec;
+  std::vector<std::unique_ptr<Algorithm>> algVec;
   std::map<std::string, Algorithm*> algMap;
   std::map<std::string, TFile*> outFileMap;
 };
 
 void Pipeline::addAlg(const char* name, Algorithm* alg)
 {
-  algVec.push_back(alg);
+  algVec.push_back(std::unique_ptr<Algorithm>(alg));
   algMap[name] = alg;
 }
 
@@ -79,14 +80,14 @@ Alg& Pipeline::getAlg(const char* name)
 
 void Pipeline::process(const std::vector<std::string>& inFiles)
 {
-  for (const auto alg : algVec)
+  for (const auto& alg : algVec)
     alg->load(inFiles);
 
-  for (const auto alg : algVec)
+  for (const auto& alg : algVec)
     alg->connect(*this);
 
   while (true) {
-    for (const auto alg : algVec) {
+    for (const auto& alg : algVec) {
       const auto status = alg->execute();
       if (status == Algorithm::Status::SkipToNext)
         break;
@@ -96,6 +97,6 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
   }
 
  end:
-  for (const auto alg : algVec)
+  for (const auto& alg : algVec)
     alg->finalize();
 }

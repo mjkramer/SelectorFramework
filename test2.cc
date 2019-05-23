@@ -170,7 +170,7 @@ void runTest()
 {
   Pipeline p;
 
-  p.addAlg("SingReader", new SingReader); // XXX leak, use unique_ptr
+  p.addAlg("SingReader", new SingReader);
   p.addAlg("CrossTrigger", new CrossTriggerAlg);
   p.addAlg("Dumper", new DumperAlg);
 
