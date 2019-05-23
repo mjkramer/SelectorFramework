@@ -166,13 +166,21 @@ std::vector<std::string> deffiles()
   };
 }
 
+namespace std {
+  template <class T, class... Args>
+  unique_ptr<T> make_unique(Args&&... args)
+  {
+    return unique_ptr<T>(new T(forward<Args>(args)...));
+  }
+}
+
 void runTest()
 {
   Pipeline p;
 
-  p.addAlg("SingReader", new SingReader);
-  p.addAlg("CrossTrigger", new CrossTriggerAlg);
-  p.addAlg("Dumper", new DumperAlg);
+  p.addAlg("SingReader", std::make_unique<SingReader>());
+  p.addAlg("CrossTrigger", std::make_unique<CrossTriggerAlg>());
+  p.addAlg("Dumper", std::make_unique<DumperAlg>());
 
   p.process(deffiles());
 }

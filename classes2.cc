@@ -41,7 +41,7 @@ public:
 
 class Pipeline {
 public:
-  void addAlg(const char* name, Algorithm* alg);
+  void addAlg(const char* name, std::unique_ptr<Algorithm>&& alg);
   void addOutFile(const char* name, const char* path);
   TFile* getOutFile(const char* name);
 
@@ -56,10 +56,10 @@ private:
   std::map<std::string, TFile*> outFileMap;
 };
 
-void Pipeline::addAlg(const char* name, Algorithm* alg)
+void Pipeline::addAlg(const char* name, std::unique_ptr<Algorithm>&& alg)
 {
-  algVec.push_back(std::unique_ptr<Algorithm>(alg));
-  algMap[name] = alg;
+  algMap[name] = alg.get();
+  algVec.emplace_back(std::move(alg));
 }
 
 void Pipeline::addOutFile(const char* name, const char* path)
