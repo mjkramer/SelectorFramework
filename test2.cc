@@ -49,13 +49,15 @@ Algorithm::Status SeqReader<NChain>::execute()
     return Status::EndOfFile;
 }
 
+// ----------------------------------------------------------------------
+
 class SingReader : public SeqReader<2> {
 public:
   SingReader();
-  void dump();
+  void dump() const;
   Algorithm::Status execute() override; // XXX
 
-  struct {
+  struct Data {
     // RecHeader
     Short_t detector;
     UInt_t triggerType, triggerTimeSec, triggerTimeNanoSec;
@@ -92,8 +94,9 @@ void SingReader::initBranches()
   BR(Quadrant); BR(MaxQ); BR(MaxQ_2inchPMT); BR(time_PSD); BR(time_PSD1);
 }
 
-void SingReader::dump()
+void SingReader::dump() const
 {
+  std::cout << std::endl;
 #define DU(b) std::cout << #b " = " << data.b << std::endl
   DU(detector);
   DU(triggerType); DU(triggerTimeSec); DU(triggerTimeNanoSec);
@@ -104,6 +107,8 @@ void SingReader::dump()
 #undef DU
   std::cout << std::endl;
 }
+
+// ----------------------------------------------------------------------
 
 class DumperAlg : public Algorithm {
 public:
@@ -121,9 +126,37 @@ void DumperAlg::connect(Pipeline& pipeline)
 
 Algorithm::Status DumperAlg::execute()
 {
-  std::cout << "e = " << singData->energy << ", nHit = " << singData->nHit << std::endl;
+  std::cout << "e = " << singData->energy << ", nHit = " << singData->nHit << "\n\n";
   return Status::Continue;
 }
+
+// ----------------------------------------------------------------------
+
+class CrossTriggerAlg : public Algorithm {
+public:
+  void connect(Pipeline& pipeline) override;
+  Status execute() override;
+
+private:
+  const SingReader::Data* singData;
+};
+
+void CrossTriggerAlg::connect(Pipeline& pipeline)
+{
+  singData = &pipeline.getAlg<SingReader>("SingReader").data;
+}
+
+Algorithm::Status CrossTriggerAlg::execute()
+{
+  const UInt_t crossMask = 0x10000002;
+  if ((singData->triggerType & crossMask) == crossMask) {
+    std::cout << "Cross trigger, skipping!" << std::endl << std::endl;
+    return Status::SkipToNext;
+  }
+  return Status::Continue;
+}
+
+// ----------------------------------------------------------------------
 
 std::vector<std::string> deffiles()
 {
@@ -138,6 +171,7 @@ void runTest()
   Pipeline p;
 
   p.addAlg("SingReader", new SingReader); // XXX leak, use unique_ptr
+  p.addAlg("CrossTrigger", new CrossTriggerAlg);
   p.addAlg("Dumper", new DumperAlg);
 
   p.process(deffiles());
