@@ -32,8 +32,8 @@ public:
 
   virtual ~Algorithm() { };
 
-  virtual void initialize(Pipeline& pipeline,
-                          const std::vector<std::string>& inFiles) { };
+  virtual void load(const std::vector<std::string>& inFiles) { };
+  virtual void connect(Pipeline& pipeline) { };
   virtual Status execute() = 0;
   virtual void finalize() { };
 };
@@ -80,7 +80,10 @@ Alg& Pipeline::getAlg(const char* name)
 void Pipeline::process(const std::vector<std::string>& inFiles)
 {
   for (const auto alg : algVec)
-    alg->initialize(*this, inFiles);
+    alg->load(inFiles);
+
+  for (const auto alg : algVec)
+    alg->connect(*this);
 
   while (true) {
     for (const auto alg : algVec) {

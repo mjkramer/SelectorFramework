@@ -7,8 +7,7 @@ template <int NChain = 1>
 class SeqReader : public Algorithm {
 public:
   SeqReader(std::initializer_list<const char*> chainNames);
-  void initialize(Pipeline& pipeline,
-                  const std::vector<std::string>& inFiles) override;
+  void load(const std::vector<std::string>& inFiles) override;
   Algorithm::Status execute() override;
 
 protected:
@@ -26,8 +25,7 @@ SeqReader<NChain>::SeqReader(std::initializer_list<const char*> chainNames)
 }
 
 template <int NChain>
-void SeqReader<NChain>::initialize(Pipeline& _pipeline,
-                                   const std::vector<std::string>& inFiles)
+void SeqReader<NChain>::load(const std::vector<std::string>& inFiles)
 {
   for (int i = 0; i < NChain; ++i) {
     util::initChain(chains[i], inFiles);
@@ -109,16 +107,14 @@ void SingReader::dump()
 
 class DumperAlg : public Algorithm {
 public:
-  void initialize(Pipeline& pipeline,
-                  const std::vector<std::string>& inFiles) override;
+  void connect(Pipeline& pipeline) override;
   Status execute() override;
 
 private:
   const decltype(SingReader::data)* singData;
 };
 
-void DumperAlg::initialize(Pipeline& pipeline,
-                           const std::vector<std::string>& _inFiles)
+void DumperAlg::connect(Pipeline& pipeline)
 {
   singData = &pipeline.getAlg<SingReader>("SingReader").data;
 }
