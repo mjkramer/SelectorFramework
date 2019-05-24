@@ -178,9 +178,9 @@ void runTest()
 {
   Pipeline p;
 
-  p.addAlg("SingReader", std::make_unique<SingReader>());
-  p.addAlg("CrossTrigger", std::make_unique<CrossTriggerAlg>());
-  p.addAlg("Dumper", std::make_unique<DumperAlg>());
+  p.makeAlg<SingReader>("SingReader");
+  p.makeAlg<CrossTriggerAlg>("CrossTrigger");
+  p.makeAlg<DumperAlg>("Dumper");
 
   p.process(deffiles());
 }

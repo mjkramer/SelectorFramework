@@ -41,6 +41,9 @@ public:
 
 class Pipeline {
 public:
+  template <class Alg, class... Args>
+  void makeAlg(const char* name, Args&&... args);
+
   void addAlg(const char* name, std::unique_ptr<Algorithm>&& alg);
   void addOutFile(const char* name, const char* path);
   TFile* getOutFile(const char* name);
@@ -55,6 +58,13 @@ private:
   std::map<std::string, Algorithm*> algMap;
   std::map<std::string, TFile*> outFileMap;
 };
+
+template <class Alg, class... Args>
+void Pipeline::makeAlg(const char* name, Args&&... args)
+{
+  auto p = std::unique_ptr<Alg>(new Alg(std::forward<Args>(args)...));
+  addAlg(name, std::move(p));
+}
 
 void Pipeline::addAlg(const char* name, std::unique_ptr<Algorithm>&& alg)
 {
