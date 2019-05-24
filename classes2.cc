@@ -6,25 +6,6 @@
 #include <TChain.h>
 #include <TFile.h>
 
-namespace util {
-  void initChain(TChain& chain, const std::vector<std::string>& inFiles)
-  {
-    for (const auto& f : inFiles)
-      chain.Add(f.c_str());
-
-    chain.SetMakeClass(true);
-    chain.SetBranchStatus("*", false);
-  }
-}
-
-// #define BR(branch)                                        \
-//   THIS_CHAIN.SetBranchStatus(#branch, true);              \
-//   THIS_CHAIN.SetBranchAddress(#branch, &THIS_DATA.branch)
-
-#define BR(branch)                                        \
-  chains[0].SetBranchStatus(#branch, true);              \
-  chains[0].SetBranchAddress(#branch, &data.branch)
-
 class Pipeline;
 
 class Algorithm {
@@ -42,9 +23,11 @@ public:
 class Pipeline {
 public:
   template <class Alg, class... Args>
-  void makeAlg(const char* name, Args&&... args);
+  Alg& makeAlg(const char* name, Args&&... args);
 
-  void addAlg(const char* name, std::unique_ptr<Algorithm>&& alg);
+  template <class Alg>
+  Alg& addAlg(const char* name, std::unique_ptr<Alg>&& alg);
+
   void addOutFile(const char* name, const char* path);
   TFile* getOutFile(const char* name);
 
@@ -60,16 +43,19 @@ private:
 };
 
 template <class Alg, class... Args>
-void Pipeline::makeAlg(const char* name, Args&&... args)
+Alg& Pipeline::makeAlg(const char* name, Args&&... args)
 {
   auto p = std::unique_ptr<Alg>(new Alg(std::forward<Args>(args)...));
-  addAlg(name, std::move(p));
+  return addAlg(name, std::move(p));
 }
 
-void Pipeline::addAlg(const char* name, std::unique_ptr<Algorithm>&& alg)
+template <class Alg>
+Alg& Pipeline::addAlg(const char* name, std::unique_ptr<Alg>&& alg)
 {
-  algMap[name] = alg.get();
+  Alg* p = alg.get();
+  algMap[name] = p;
   algVec.emplace_back(std::move(alg));
+  return *p;
 }
 
 void Pipeline::addOutFile(const char* name, const char* path)
@@ -110,3 +96,18 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
   for (const auto& alg : algVec)
     alg->finalize();
 }
+
+namespace util {
+  void initChain(TChain& chain, const std::vector<std::string>& inFiles)
+  {
+    for (const auto& f : inFiles)
+      chain.Add(f.c_str());
+
+    chain.SetMakeClass(true);
+    chain.SetBranchStatus("*", false);
+  }
+}
+
+#define BR(branch)                                    \
+  chains[0]->SetBranchStatus(#branch, true);          \
+  chains[0]->SetBranchAddress(#branch, &data.branch)

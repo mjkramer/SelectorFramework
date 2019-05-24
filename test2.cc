@@ -3,55 +3,66 @@
 #include <initializer_list>
 #include <iostream>
 
-template <int NChain = 1>
+namespace std {
+  template <class T, class... Args>
+  unique_ptr<T> make_unique(Args&&... args)
+  {
+    return unique_ptr<T>(new T(forward<Args>(args)...));
+  }
+}
+
 class SeqReader : public Algorithm {
 public:
   SeqReader(std::initializer_list<const char*> chainNames);
   void load(const std::vector<std::string>& inFiles) override;
   Algorithm::Status execute() override;
 
+  SeqReader& setMaxEvents(size_t n);
+
 protected:
   virtual void initBranches() { };
 
-  TChain chains[NChain];
-  int entry = 0;
+  std::vector<std::unique_ptr<TChain>> chains;
+  size_t entry = 0;
+  size_t maxEvents = 0;
 };
 
-template <int NChain>
-SeqReader<NChain>::SeqReader(std::initializer_list<const char*> chainNames)
+SeqReader::SeqReader(std::initializer_list<const char*> chainNames)
 {
-  for (int i = 0; i < NChain; ++i)
-    new(&chains[i]) TChain(chainNames.begin()[i]);
+  for (const auto name : chainNames)
+    chains.emplace_back(std::make_unique<TChain>(name));
 }
 
-template <int NChain>
-void SeqReader<NChain>::load(const std::vector<std::string>& inFiles)
+void SeqReader::load(const std::vector<std::string>& inFiles)
 {
-  for (int i = 0; i < NChain; ++i) {
-    util::initChain(chains[i], inFiles);
+  for (size_t i = 0; i < chains.size(); ++i) {
+    util::initChain(*chains[i], inFiles);
     if (i > 0)
-      chains[0].AddFriend(&chains[i]);
+      chains[0]->AddFriend(chains[i].get());
   }
 
   initBranches();
 }
 
-template <int NChain>
-Algorithm::Status SeqReader<NChain>::execute()
+Algorithm::Status SeqReader::execute()
 {
-  // std::cout << entry << std::endl;
-  // std::cout << chains[0].GetEntry(entry) << std::endl;
-
-  if (chains[0].GetEntry(entry) && entry < 100) { // XXX
+  bool proceed = maxEvents == 0 || entry < maxEvents;
+  if (proceed && chains[0]->GetEntry(entry)) {
     ++entry;
     return Status::Continue;
   } else
     return Status::EndOfFile;
 }
 
+SeqReader& SeqReader::setMaxEvents(size_t n)
+{
+  maxEvents = n;
+  return *this;
+}
+
 // ----------------------------------------------------------------------
 
-class SingReader : public SeqReader<2> {
+class SingReader : public SeqReader {
 public:
   SingReader();
   void dump() const;
@@ -166,19 +177,11 @@ std::vector<std::string> deffiles()
   };
 }
 
-namespace std {
-  template <class T, class... Args>
-  unique_ptr<T> make_unique(Args&&... args)
-  {
-    return unique_ptr<T>(new T(forward<Args>(args)...));
-  }
-}
-
 void runTest()
 {
   Pipeline p;
 
-  p.makeAlg<SingReader>("SingReader");
+  p.makeAlg<SingReader>("SingReader").setMaxEvents(100);
   p.makeAlg<CrossTriggerAlg>("CrossTrigger");
   p.makeAlg<DumperAlg>("Dumper");
 
