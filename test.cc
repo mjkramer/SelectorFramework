@@ -1,4 +1,5 @@
-#include "classes2.cc"
+#include "Kernel.cc"
+#include "SeqReader.cc"
 
 #include <initializer_list>
 #include <iostream>
