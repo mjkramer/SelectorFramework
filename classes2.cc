@@ -114,7 +114,7 @@ namespace util {
 
 // ----------------------------------------------------------------------
 
-namespace std {
+namespace util {
   template <class T, class... Args>
   unique_ptr<T> make_unique(Args&&... args)
   {
@@ -143,7 +143,7 @@ protected:
 SeqReader::SeqReader(std::initializer_list<const char*> chainNames)
 {
   for (const auto name : chainNames)
-    chains.emplace_back(std::make_unique<TChain>(name));
+    chains.emplace_back(util::make_unique<TChain>(name));
 }
 
 void SeqReader::load(const std::vector<std::string>& inFiles)
