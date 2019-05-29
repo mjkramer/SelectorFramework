@@ -100,3 +100,39 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
   for (const auto& alg : algVec)
     alg->finalize();
 }
+
+// -----------------------------------------------------------------------------
+
+template <class ReaderT>
+class SimpleAlg : public Algorithm {
+public:
+  SimpleAlg(const char* readerName) : readerName(readerName) {}
+  void connect(Pipeline& pipeline) override;
+
+protected:
+  const typename ReaderT::Data* data;
+
+private:
+  std::string readerName;
+};
+
+template <class ReaderT>
+void SimpleAlg<ReaderT>::connect(Pipeline& pipeline)
+{
+  data = &pipeline.getAlg<ReaderT>(readerName.c_str()).data;
+}
+
+// -----------------------------------------------------------------------------
+
+// template <class ReaderT>
+// using algfunc_t = std::function<Algorithm::Status (typename ReaderT::Data*)>;
+
+template <class ReaderT>
+using algfunc_t = Algorithm::Status (const typename ReaderT::Data*);
+
+template <class ReaderT, algfunc_t<ReaderT> func>
+class PureAlg : public SimpleAlg<ReaderT> {
+public:
+  using SimpleAlg<ReaderT>::SimpleAlg;
+  Algorithm::Status execute() override { return func(this->data); };
+};
