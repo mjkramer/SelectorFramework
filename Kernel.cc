@@ -21,8 +21,13 @@ public:
   virtual void load(const std::vector<std::string>& inFiles) { };
   virtual void connect(Pipeline& pipeline) { };
   virtual Status execute() = 0;
-  virtual void finalize() { };
+  virtual void finalize(Pipeline& pipeline) { };
 };
+
+Algorithm::Status vetoIf(bool cond)
+{
+  return cond ? Algorithm::Status::SkipToNext : Algorithm::Status::Continue;
+}
 
 class Pipeline {
 public:
@@ -33,10 +38,10 @@ public:
   Alg& addAlg(const char* name, std::unique_ptr<Alg>&& alg);
 
   void addOutFile(const char* name, const char* path);
-  TFile* getOutFile(const char* name);
+  TFile* getOutFile(const std::string& name);
 
   template <class Alg>
-  Alg& getAlg(const char* name);
+  Alg& getAlg(const std::string& name);
 
   void process(const std::vector<std::string>& inFiles);
 
@@ -67,13 +72,13 @@ void Pipeline::addOutFile(const char* name, const char* path)
   outFileMap[name] = new TFile(path, "RECREATE");
 }
 
-TFile* Pipeline::getOutFile(const char* name)
+TFile* Pipeline::getOutFile(const std::string& name)
 {
   return outFileMap[name];
 }
 
 template <class Alg>
-Alg& Pipeline::getAlg(const char* name)
+Alg& Pipeline::getAlg(const std::string& name)
 {
   return *dynamic_cast<Alg*>(algMap[name]);
 }
@@ -98,10 +103,12 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
 
  end:
   for (const auto& alg : algVec)
-    alg->finalize();
+    alg->finalize(*this);
 }
 
 // -----------------------------------------------------------------------------
+
+// SimpleAlg/PureAlg<ReaderT> assume ReaderT { struct Data {...} data; }
 
 template <class ReaderT>
 class SimpleAlg : public Algorithm {
