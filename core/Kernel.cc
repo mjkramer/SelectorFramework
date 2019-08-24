@@ -1,5 +1,7 @@
 #pragma once
 
+#include <typeinfo>
+#include <stdexcept>
 #include <map>
 #include <memory>
 #include <string>
@@ -32,37 +34,35 @@ Algorithm::Status vetoIf(bool cond)
 class Pipeline {
 public:
   template <class Alg, class... Args>
-  Alg& makeAlg(const char* name, Args&&... args);
+  Alg& makeAlg(Args&&... args);
 
   template <class Alg>
-  Alg& addAlg(const char* name, std::unique_ptr<Alg>&& alg);
+  Alg& addAlg(std::unique_ptr<Alg>&& alg);
 
   void addOutFile(const char* name, const char* path);
   TFile* getOutFile(const std::string& name);
 
   template <class Alg>
-  Alg& getAlg(const std::string& name);
+  Alg& getAlg();
 
   void process(const std::vector<std::string>& inFiles);
 
 private:
   std::vector<std::unique_ptr<Algorithm>> algVec;
-  std::map<std::string, Algorithm*> algMap;
   std::map<std::string, TFile*> outFileMap;
 };
 
 template <class Alg, class... Args>
-Alg& Pipeline::makeAlg(const char* name, Args&&... args)
+Alg& Pipeline::makeAlg(Args&&... args)
 {
   auto p = std::unique_ptr<Alg>(new Alg(std::forward<Args>(args)...));
-  return addAlg(name, std::move(p));
+  return addAlg(std::move(p));
 }
 
 template <class Alg>
-Alg& Pipeline::addAlg(const char* name, std::unique_ptr<Alg>&& alg)
+Alg& Pipeline::addAlg(std::unique_ptr<Alg>&& alg)
 {
   Alg* p = alg.get();
-  algMap[name] = p;
   algVec.emplace_back(std::move(alg));
   return *p;
 }
@@ -78,9 +78,14 @@ TFile* Pipeline::getOutFile(const std::string& name)
 }
 
 template <class Alg>
-Alg& Pipeline::getAlg(const std::string& name)
+Alg& Pipeline::getAlg()
 {
-  return *dynamic_cast<Alg*>(algMap[name]);
+  for (const std::unique_ptr<Algorithm>& pAlg : algVec) {
+    auto &alg = *pAlg;          // https://stackoverflow.com/q/46494928
+    if (typeid(alg) == typeid(Alg))
+      return *dynamic_cast<Alg*>(pAlg.get());
+  }
+  throw std::runtime_error(Form("getAlg() couldn't find %s", typeid(Alg).name()));
 }
 
 void Pipeline::process(const std::vector<std::string>& inFiles)
@@ -108,25 +113,21 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
 
 // -----------------------------------------------------------------------------
 
-// SimpleAlg/PureAlg<ReaderT> assume ReaderT { struct Data {...} data; }
+// SimpleAlg/PureAlg<ReaderT> assume ReaderT { struct {...} data; }
 
 template <class ReaderT>
 class SimpleAlg : public Algorithm {
 public:
-  SimpleAlg(const char* readerName) : readerName(readerName) {}
   void connect(Pipeline& pipeline) override;
 
 protected:
-  const typename ReaderT::Data* data;
-
-private:
-  std::string readerName;
+  const decltype(ReaderT::data)* data;
 };
 
 template <class ReaderT>
 void SimpleAlg<ReaderT>::connect(Pipeline& pipeline)
 {
-  data = &pipeline.getAlg<ReaderT>(readerName.c_str()).data;
+  data = &pipeline.getAlg<ReaderT>().data;
 }
 
 // -----------------------------------------------------------------------------
@@ -135,11 +136,10 @@ void SimpleAlg<ReaderT>::connect(Pipeline& pipeline)
 // using algfunc_t = std::function<Algorithm::Status (typename ReaderT::Data*)>;
 
 template <class ReaderT>
-using algfunc_t = Algorithm::Status (const typename ReaderT::Data*);
+using algfunc_t = Algorithm::Status (const decltype(ReaderT::data)*);
 
 template <class ReaderT, algfunc_t<ReaderT> func>
 class PureAlg : public SimpleAlg<ReaderT> {
 public:
-  using SimpleAlg<ReaderT>::SimpleAlg;
   Algorithm::Status execute() override { return func(this->data); };
 };
