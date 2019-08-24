@@ -1,9 +1,9 @@
 #include <TH1F.h>
 
-#include "Kernel.cc"
-#include "SeqReader.cc"
-#include "RingBuf.cc"
-#include "Util.cc"
+#include "../core/Kernel.cc"
+#include "../core/SeqReader.cc"
+#include "../core/RingBuf.cc"
+#include "../core/Util.cc"
 
 using Status = Algorithm::Status;
 using namespace util;
@@ -79,10 +79,7 @@ using FlasherAlg = PureAlg<SingReader, flasherAlg>;
 
 class MuonAlg : public SimpleAlg<SingReader> {
 public:
-  // using SimpleAlg<SingReader>::SimpleAlg;
-  MuonAlg(const char* readerName) :
-    SimpleAlg(readerName),
-    muons(N_MUONS) {}
+  MuonAlg() : muons(N_MUONS) {}
 
   Status execute() override;
 
@@ -121,9 +118,7 @@ bool MuonAlg::isMuon()
 
 class SinglesVsMuonsAlg : public Algorithm {
 public:
-  SinglesVsMuonsAlg(const char* readerAlgName,
-                    const char* muonAlgName,
-                    const char* outFileName);
+  SinglesVsMuonsAlg(const char* outFileName);
 
   void connect(Pipeline& pipeline) override;
   Status execute() override;
@@ -145,16 +140,14 @@ private:
   const SingReader::Data* data;
   const RingBuf<Time>* muons;
 
-  std::string readerName, muonName, outFileName;
+  std::string outFileName;
 };
 
-SinglesVsMuonsAlg::SinglesVsMuonsAlg(const char* readerName,
-                                     const char* muonName,
-                                     const char* outFileName) :
+SinglesVsMuonsAlg::SinglesVsMuonsAlg(const char* outFileName) :
   hDlyAll(newHist("hDlyAll", "Delayed-like triggers")),
   hDlyLoose(newHist("hDlyLoose", "Delayed-like triggers [loose cut]")),
   hDlyTight(newHist("hDlyTight", "Delayed-like triggers [tight cut]")),
-  readerName(readerName), muonName(muonName), outFileName(outFileName) {}
+  outFileName(outFileName) {}
 
 TH1F SinglesVsMuonsAlg::newHist(const char* name, const char* title)
 {
@@ -166,8 +159,8 @@ TH1F SinglesVsMuonsAlg::newHist(const char* name, const char* title)
 
 void SinglesVsMuonsAlg::connect(Pipeline& pipeline)
 {
-  data = &pipeline.getAlg<SingReader>(readerName).data;
-  muons = &pipeline.getAlg<MuonAlg>(muonName).muons;
+  data = &pipeline.getAlg<SingReader>().data;
+  muons = &pipeline.getAlg<MuonAlg>().muons;
 }
 
 void SinglesVsMuonsAlg::finalize(Pipeline& pipeline)
@@ -231,21 +224,18 @@ Status SinglesVsMuonsAlg::execute()
   return Status::Continue;
 }
 
-void run(const std::vector<std::string>& files)
+void run(const std::vector<std::string>& files, int maxEvents=0)
 {
   Pipeline p;
 
-  p.addOutFile("file0", "results.root");
+  p.addOutFile("resultsFile", "results.root");
 
-  p.makeAlg<SingReader>("TheSingReader");
-  p.makeAlg<CrossTriggerAlg>("TheCrossTriggerAlg", "TheSingReader");
-  p.makeAlg<MuonAlg>("TheMuonAlg", "TheSingReader");
-  p.makeAlg<FlasherAlg>("TheFlasherAlg", "TheSingReader");
+  p.makeAlg<SingReader>().setMaxEvents(maxEvents);
+  p.makeAlg<CrossTriggerAlg>();
+  p.makeAlg<MuonAlg>();
+  p.makeAlg<FlasherAlg>();
 
-  p.makeAlg<SinglesVsMuonsAlg>("TheSinglesVsMuonsAlg",
-                               "TheSingReader",
-                               "TheMuonAlg",
-                               "file0");
+  p.makeAlg<SinglesVsMuonsAlg>("resultsFile");
 
   p.process(files);
 }
