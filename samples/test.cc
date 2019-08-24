@@ -1,5 +1,5 @@
-#include "Kernel.cc"
-#include "SeqReader.cc"
+#include "../core/Kernel.cc"
+#include "../core/SeqReader.cc"
 
 #include <initializer_list>
 #include <iostream>
@@ -74,7 +74,7 @@ private:
 
 void DumperAlg::connect(Pipeline& pipeline)
 {
-  singData = &pipeline.getAlg<SingReader>("SingReader").data;
+  singData = &pipeline.getAlg<SingReader>().data;
 }
 
 Algorithm::Status DumperAlg::execute()
@@ -96,7 +96,7 @@ private:
 
 void CrossTriggerAlg::connect(Pipeline& pipeline)
 {
-  singData = &pipeline.getAlg<SingReader>("SingReader").data;
+  singData = &pipeline.getAlg<SingReader>().data;
 }
 
 Algorithm::Status CrossTriggerAlg::execute()
@@ -134,10 +134,10 @@ void runTest()
 {
   Pipeline p;
 
-  p.makeAlg<SingReader>("SingReader").setMaxEvents(100);
-  p.makeAlg<CrossTriggerAlg>("CrossTrigger");
-  p.makeAlg<DumperAlg>("Dumper");
-  p.makeAlg<ExtraDumperAlg>("ExtraDumper", "SingReader");
+  p.makeAlg<SingReader>().setMaxEvents(100);
+  p.makeAlg<CrossTriggerAlg>();
+  p.makeAlg<DumperAlg>();
+  p.makeAlg<ExtraDumperAlg>();
 
   p.process(deffiles());
 }
