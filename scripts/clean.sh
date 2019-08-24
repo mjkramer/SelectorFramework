@@ -1,2 +1,2 @@
 #!/bin/bash
-rm *ACLiC* *.d *.so 2>/dev/null
+find . -name '*ACLiC*' -o -name '*.d' -o -name '*.so' | xargs rm 2>/dev/null
