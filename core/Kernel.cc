@@ -1,10 +1,12 @@
 #pragma once
 
-#include <typeinfo>
-#include <stdexcept>
+#include <functional>
 #include <map>
 #include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <typeinfo>
 #include <vector>
 
 #include <TChain.h>
@@ -40,10 +42,10 @@ public:
   Alg& addAlg(std::unique_ptr<Alg>&& alg);
 
   void addOutFile(const char* name, const char* path);
-  TFile* getOutFile(const std::string& name);
+  TFile* getOutFile(const char* name);
 
   template <class Alg>
-  Alg& getAlg();
+  Alg* getAlg(std::optional<std::function<bool(const Alg&)>> pred = std::nullopt);
 
   void process(const std::vector<std::string>& inFiles);
 
@@ -72,18 +74,21 @@ void Pipeline::addOutFile(const char* name, const char* path)
   outFileMap[name] = new TFile(path, "RECREATE");
 }
 
-TFile* Pipeline::getOutFile(const std::string& name)
+TFile* Pipeline::getOutFile(const char* name)
 {
   return outFileMap[name];
 }
 
 template <class Alg>
-Alg& Pipeline::getAlg()
+Alg* Pipeline::getAlg(std::optional<std::function<bool(const Alg&)>> pred)
 {
   for (const std::unique_ptr<Algorithm>& pAlg : algVec) {
     auto &alg = *pAlg;          // https://stackoverflow.com/q/46494928
-    if (typeid(alg) == typeid(Alg))
-      return *dynamic_cast<Alg*>(pAlg.get());
+    if (typeid(alg) == typeid(Alg)) {
+      auto castedAlgPtr = dynamic_cast<Alg*>(pAlg.get());
+      if (!pred.has_value() || pred.value()(*castedAlgPtr))
+        return castedAlgPtr;
+    }
   }
   throw std::runtime_error(Form("getAlg() couldn't find %s", typeid(Alg).name()));
 }
@@ -97,16 +102,21 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
     alg->connect(*this);
 
   while (true) {
+    bool atEnd = false;
+
     for (const auto& alg : algVec) {
       const auto status = alg->execute();
       if (status == Algorithm::Status::SkipToNext)
         break;
       if (status == Algorithm::Status::EndOfFile)
-        goto end;
+        // Don't exit right away; run remaining algs first
+        atEnd = true;
     }
+
+    if (atEnd)
+      break;
   }
 
- end:
   for (const auto& alg : algVec)
     alg->finalize(*this);
 }
@@ -119,6 +129,9 @@ template <class ReaderT>
 class SimpleAlg : public Algorithm {
 public:
   void connect(Pipeline& pipeline) override;
+  Algorithm::Status execute() override;
+
+  virtual Algorithm::Status consume(const decltype(ReaderT::data)& data) = 0;
 
 protected:
   const decltype(ReaderT::data)* data;
@@ -127,7 +140,13 @@ protected:
 template <class ReaderT>
 void SimpleAlg<ReaderT>::connect(Pipeline& pipeline)
 {
-  data = &pipeline.getAlg<ReaderT>().data;
+  data = &pipeline.getAlg<ReaderT>()->data;
+}
+
+template <class ReaderT>
+Algorithm::Status SimpleAlg<ReaderT>::execute()
+{
+  return consume(*data);
 }
 
 // -----------------------------------------------------------------------------
@@ -136,10 +155,13 @@ void SimpleAlg<ReaderT>::connect(Pipeline& pipeline)
 // using algfunc_t = std::function<Algorithm::Status (typename ReaderT::Data*)>;
 
 template <class ReaderT>
-using algfunc_t = Algorithm::Status (const decltype(ReaderT::data)*);
+using algfunc_t = Algorithm::Status (const decltype(ReaderT::data)&);
 
 template <class ReaderT, algfunc_t<ReaderT> func>
 class PureAlg : public SimpleAlg<ReaderT> {
 public:
-  Algorithm::Status execute() override { return func(this->data); };
+  Algorithm::Status consume(const decltype(ReaderT::data)& data) override
+  {
+    return func(data);
+  };
 };

@@ -49,10 +49,10 @@ void SingReader::initBranches()
 
 // -----------------------------------------------------------------------------
 
-Status crossTriggerAlg(const SingReader::Data* data)
+Status crossTriggerAlg(const SingReader::Data& e)
 {
   const UInt_t crossMask = 0x10000002;
-  bool cross = (data->triggerType & crossMask) == crossMask;
+  bool cross = (e.triggerType & crossMask) == crossMask;
 
   return vetoIf(cross);
 }
@@ -61,10 +61,9 @@ using CrossTriggerAlg = PureAlg<SingReader, crossTriggerAlg>;
 
 // -----------------------------------------------------------------------------
 
-Status flasherAlg(const SingReader::Data* data)
+Status flasherAlg(const SingReader::Data& e)
 {
 #define SQ(x) pow(x, 2)
-  const auto& e = *data;
   bool flasher = SQ(e.Quadrant) + SQ(e.MaxQ / 0.45) > 1
     || 4*SQ(1 - e.time_PSD) + 1.8*SQ(1 - e.time_PSD1) > 1
     || e.MaxQ_2inchPMT > 100;

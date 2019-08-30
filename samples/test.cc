@@ -114,9 +114,9 @@ Algorithm::Status CrossTriggerAlg::execute()
 template <algfunc_t<SingReader> func>
 using SingReaderFunc = PureAlg<SingReader, func>;
 
-Algorithm::Status extraDumper(const SingReader::Data* data)
+Algorithm::Status extraDumper(const SingReader::Data& data)
 {
-  std::cout << "NominalCharge = " << data->NominalCharge << "\n\n";
+  std::cout << "NominalCharge = " << data.NominalCharge << "\n\n";
   return Algorithm::Status::Continue;
 }
 
