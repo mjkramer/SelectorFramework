@@ -38,6 +38,8 @@ struct Time {
 
   float diff_us(const Time& other) const
   {
-    return 1e6*(s - other.s) + 1e-3*(ns - other.ns);
+    // cast to enable signed arithmetic
+    int s1 = s, ns1 = ns, s2 = other.s, ns2 = other.ns;
+    return 1e6*(s1 - s2) + 1e-3*(ns1 - ns2);
   }
 };
