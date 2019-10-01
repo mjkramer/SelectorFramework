@@ -58,10 +58,12 @@ public:
   Tool* getTool(Pred<Tool> pred = std::nullopt);
 
 
-  void makeOutFile(const char* path, const char* name = "");
-  TFile* getOutFile(const char* name = "");
+  void makeOutFile(const char* path, const char* name = DefaultFile);
+  TFile* getOutFile(const char* name = DefaultFile);
+  static constexpr const char* const DefaultFile = "";
 
   void process(const std::vector<std::string>& inFiles);
+
 
 private:
   template <class Thing>
