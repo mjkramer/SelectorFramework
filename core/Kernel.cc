@@ -158,9 +158,10 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
       const auto status = alg->execute();
       if (status == Algorithm::Status::SkipToNext)
         break;
-      if (status == Algorithm::Status::EndOfFile)
-        // Don't exit right away; run remaining algs first
+      if (status == Algorithm::Status::EndOfFile) {
         atEnd = true;
+        break;
+      }
     }
 
     if (atEnd)
