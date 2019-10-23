@@ -64,6 +64,8 @@ public:
 
   void process(const std::vector<std::string>& inFiles);
 
+  ~Pipeline();
+
 
 private:
   template <class Thing>
@@ -171,6 +173,12 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
 
   for (const auto& alg : algVec)
     alg->finalize(*this);
+}
+
+Pipeline::~Pipeline()
+{
+  for (const auto& kv : outFileMap)
+    kv.second->Close();
 }
 
 // -----------------------------------------------------------------------------
