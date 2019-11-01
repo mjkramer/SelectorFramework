@@ -19,6 +19,7 @@ class Pipeline;
 
 class Node {
 public:
+  Node() = default;
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
 

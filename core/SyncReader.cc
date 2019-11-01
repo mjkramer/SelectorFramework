@@ -10,8 +10,6 @@ class SyncReader : public Algorithm {
 public:
   using Data = TreeT;
 
-  SyncReader(const SyncReader<TreeT>& other) = delete; // prevent copying
-
   // being a template ctor, this must be inside the class definition
   template <class... DataArgs>
   SyncReader(std::initializer_list<const char*> chainNames, DataArgs&&... data_args) :
