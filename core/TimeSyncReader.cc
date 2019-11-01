@@ -115,7 +115,7 @@ TimeSyncReader<TreeT>& TimeSyncReader<TreeT>::setEpsilon_us(float eps_us)
 // Use this to skip over downstream algs while upstream reader is still
 // prefetching (e.g. to delay IBD selection until we've got a buffer of muons)
 template <class ReaderT>
-class LoopTillDonePrefetching : public Algorithm {
+class PrefetchLooper : public Algorithm {
 public:
   void connect(Pipeline& p) override;
   Algorithm::Status execute() override;
@@ -125,13 +125,13 @@ private:
 };
 
 template <class ReaderT>
-void LoopTillDonePrefetching<ReaderT>::connect(Pipeline& p)
+void PrefetchLooper<ReaderT>::connect(Pipeline& p)
 {
   reader = p.getAlg<ReaderT>();
 }
 
 template <class ReaderT>
-Algorithm::Status LoopTillDonePrefetching<ReaderT>::execute()
+Algorithm::Status PrefetchLooper<ReaderT>::execute()
 {
   if (reader->prefetching())
     return Status::SkipToNext;
