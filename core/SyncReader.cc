@@ -25,17 +25,20 @@ public:
   void load(const std::vector<std::string>& inFiles) override;
   Algorithm::Status execute() override;
 
+  bool ready() { return ready_; }
+
   SyncReader& setMaxEvents(size_t n);
   SyncReader& setReportInterval(size_t n);
 
   TreeT data;
 
-private:
+protected:
   BranchManager mgr;
   std::vector<std::unique_ptr<TChain>> chains;
   size_t entry = 0;
   size_t maxEvents = 0;
   size_t reportInterval = 0;
+  bool ready_ = false;
 };
 
 template <class TreeT>
@@ -60,9 +63,12 @@ Algorithm::Status SyncReader<TreeT>::execute()
     if (reportInterval && entry % reportInterval == 0)
       std::cout << "---------- Event " << Form("%7zu", entry) << " ----------" << std::endl;
     ++entry;
+    ready_ = true;
     return Status::Continue;
-  } else
+  } else {
+    ready_ = false;
     return Status::EndOfFile;
+  }
 }
 
 template <class TreeT>

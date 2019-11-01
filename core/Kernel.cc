@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <typeinfo>
@@ -18,6 +19,9 @@ class Pipeline;
 
 class Node {
 public:
+  Node(const Node&) = delete;
+  Node& operator=(const Node&) = delete;
+
   virtual ~Node() { };
   virtual void connect(Pipeline& pipeline) { };
 };
@@ -32,6 +36,8 @@ public:
   virtual void load(const std::vector<std::string>& inFiles) { };
   virtual Status execute() = 0;
   virtual void finalize(Pipeline& pipeline) { };
+  virtual bool isReader() { return false; } // "reader" algs need special treatment
+  virtual int getTag() { return 0; } // for identification
 };
 
 Algorithm::Status vetoIf(bool cond)
@@ -41,6 +47,9 @@ Algorithm::Status vetoIf(bool cond)
 
 class Pipeline {
 public:
+  Pipeline(const Pipeline&) = delete;
+  Pipeline& operator=(const Pipeline&) = delete;
+
   template <class Alg, class... Args>
   Alg& makeAlg(Args&&... args);
 
@@ -54,13 +63,22 @@ public:
   template <class Alg>
   Alg* getAlg(Pred<Alg> pred = std::nullopt);
 
+  template <class Alg>
+  Alg* getAlg(int tag);
+
   template <class Tool>
   Tool* getTool(Pred<Tool> pred = std::nullopt);
+
+  template <class Tool>
+  Tool* getTool(int tag);
 
 
   void makeOutFile(const char* path, const char* name = DefaultFile);
   TFile* getOutFile(const char* name = DefaultFile);
   static constexpr const char* const DefaultFile = "";
+
+  size_t inFileCount();
+  TFile* inFile(size_t i = 0);
 
   void process(const std::vector<std::string>& inFiles);
 
@@ -77,10 +95,16 @@ private:
   template <class Thing, class BaseThing>
   Thing* getThing(PtrVec<BaseThing>& vec, Pred<Thing> pred);
 
+  template <class Thing, class BaseThing>
+  Thing* getThing(PtrVec<BaseThing>& vec, int tag);
 
   PtrVec<Algorithm> algVec;
+  std::set<const Algorithm*> runningReaders;
   PtrVec<Tool> toolVec;
   std::map<std::string, TFile*> outFileMap;
+
+  std::vector<std::string> inFilePaths;
+  std::map<std::string, TFile*> inFileHandles;
 };
 
 template <class Thing, class BaseThing, class... Args>
@@ -95,7 +119,12 @@ Thing& Pipeline::makeThing(PtrVec<BaseThing>& vec, Args&&... args)
 template <class Alg, class... Args>
 Alg& Pipeline::makeAlg(Args&&... args)
 {
-  return makeThing<Alg>(algVec, std::forward<Args>(args)...);
+  auto& alg = makeThing<Alg>(algVec, std::forward<Args>(args)...);
+
+  if (alg.isReader())
+    runningReaders.insert(&alg);
+
+  return alg;
 }
 
 template <class Tool, class... Args>
@@ -118,16 +147,37 @@ Thing* Pipeline::getThing(PtrVec<BaseThing>& vec, Pred<Thing> pred)
   throw std::runtime_error(Form("getThing() couldn't find %s", typeid(Thing).name()));
 }
 
+template <class Thing, class BaseThing>
+Thing* Pipeline::getThing(PtrVec<BaseThing>& vec, int tag)
+{
+  auto pred = [&](const Thing& thing) {
+    return thing.getTag() == tag;
+  };
+  return getThing<Thing, BaseThing>(vec, pred);
+}
+
 template <class Alg>
 Alg* Pipeline::getAlg(Pred<Alg> pred)
 {
   return getThing(algVec, pred);
 }
 
+template <class Alg>
+Alg* Pipeline::getAlg(int tag)
+{
+  return getThing<Alg>(algVec, tag);
+}
+
 template <class Tool>
 Tool* Pipeline::getTool(Pred<Tool> pred)
 {
   return getThing(toolVec, pred);
+}
+
+template <class Tool>
+Tool* Pipeline::getTool(int tag)
+{
+  return getThing<Tool>(toolVec, tag);
 }
 
 void Pipeline::makeOutFile(const char* path, const char* name)
@@ -140,8 +190,23 @@ TFile* Pipeline::getOutFile(const char* name)
   return outFileMap[name];
 }
 
+size_t Pipeline::inFileCount()
+{
+  return inFilePaths.size();
+}
+
+TFile* Pipeline::inFile(size_t i)
+{
+  const auto& path = inFilePaths.at(i);
+  if (!inFileHandles.count(path))
+    inFileHandles[path] = new TFile(path.c_str());
+  return inFileHandles[path];
+}
+
 void Pipeline::process(const std::vector<std::string>& inFiles)
 {
+  inFilePaths = inFiles;
+
   for (const auto& alg : algVec)
     alg->load(inFiles);
 
@@ -152,19 +217,18 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
     tool->connect(*this);
 
   while (true) {
-    bool atEnd = false;
-
     for (const auto& alg : algVec) {
+      if (alg->isReader() && runningReaders.count(alg.get()) == 0)
+        continue;
+
       const auto status = alg->execute();
       if (status == Algorithm::Status::SkipToNext)
         break;
-      if (status == Algorithm::Status::EndOfFile) {
-        atEnd = true;
-        break;
-      }
+      if (status == Algorithm::Status::EndOfFile)
+        runningReaders.erase(alg.get());
     }
 
-    if (atEnd)
+    if (runningReaders.size() == 0)
       break;
   }
 
@@ -195,19 +259,22 @@ public:
   virtual Algorithm::Status consume(const decltype(ReaderT::data)& data) = 0;
 
 protected:
-  const decltype(ReaderT::data)* data;
+  const ReaderT* reader;
 };
 
 template <class ReaderT>
 void SimpleAlg<ReaderT>::connect(Pipeline& pipeline)
 {
-  data = &pipeline.getAlg<ReaderT>()->data;
+  reader = pipeline.getAlg<ReaderT>();
 }
 
 template <class ReaderT>
 Algorithm::Status SimpleAlg<ReaderT>::execute()
 {
-  return consume(*data);
+  if (reader->ready())
+    return consume(reader->data);
+
+  else return Status::Continue;
 }
 
 // -----------------------------------------------------------------------------
