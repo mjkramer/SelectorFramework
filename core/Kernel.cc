@@ -37,11 +37,11 @@ public:
   virtual void load(const std::vector<std::string>& inFiles) { };
   virtual Status execute() = 0;
   virtual void finalize(Pipeline& pipeline) { };
-  virtual bool isReader() { return false; } // "reader" algs need special treatment
-  virtual int getTag(); // for identification
+  virtual bool isReader() const { return false; } // "reader" algs need special treatment
+  virtual int getTag() const; // for identification
 };
 
-int Algorithm::getTag()
+int Algorithm::getTag() const
 {
   throw std::runtime_error("getTag not implemented for this algorithm");
 }
@@ -53,6 +53,7 @@ Algorithm::Status vetoIf(bool cond)
 
 class Pipeline {
 public:
+  Pipeline() = default;
   Pipeline(const Pipeline&) = delete;
   Pipeline& operator=(const Pipeline&) = delete;
 
@@ -69,14 +70,14 @@ public:
   template <class Alg>
   Alg* getAlg(Pred<Alg> pred = std::nullopt);
 
-  template <class Alg>
-  Alg* getAlg(int tag);
+  template <class Alg, class T> // T should be integral
+  Alg* getAlg(T tag);
 
   template <class Tool>
   Tool* getTool(Pred<Tool> pred = std::nullopt);
 
-  template <class Tool>
-  Tool* getTool(int tag);
+  template <class Tool, class T>
+  Tool* getTool(T tag);
 
 
   void makeOutFile(const char* path, const char* name = DefaultFile);
@@ -168,10 +169,10 @@ Alg* Pipeline::getAlg(Pred<Alg> pred)
   return getThing(algVec, pred);
 }
 
-template <class Alg>
-Alg* Pipeline::getAlg(int tag)
+template <class Alg, class T>
+Alg* Pipeline::getAlg(T tag)
 {
-  return getThing<Alg>(algVec, tag);
+  return getThing<Alg>(algVec, int(tag));
 }
 
 template <class Tool>
@@ -180,10 +181,10 @@ Tool* Pipeline::getTool(Pred<Tool> pred)
   return getThing(toolVec, pred);
 }
 
-template <class Tool>
-Tool* Pipeline::getTool(int tag)
+template <class Tool, class T>
+Tool* Pipeline::getTool(T tag)
 {
-  return getThing<Tool>(toolVec, tag);
+  return getThing<Tool>(toolVec, int(tag));
 }
 
 void Pipeline::makeOutFile(const char* path, const char* name)
