@@ -6,6 +6,8 @@
 
 #include "Kernel.cc"
 
+#include <type_traits>
+
 // ROOT 6.19 should support automagic std::array branches; for 6.18, we use hack:
 static char DataTypeToChar(EDataType datatype);
 
@@ -27,6 +29,20 @@ struct BranchManager {
 };
 
 template <typename T>
+static std::enable_if_t<std::is_enum_v<T>, void>
+do_branch(TTree* tree, const char* name, T* ptr)
+{
+  tree->Branch(name, reinterpret_cast<std::underlying_type_t<T>*>(ptr));
+}
+
+template <typename T>
+static std::enable_if_t<!std::is_enum_v<T>, void>
+do_branch(TTree* tree, const char* name, T* ptr)
+{
+  tree->Branch(name, ptr);
+}
+
+template <typename T>
 void BranchManager::branch(const char* name, T* ptr)
 {
   if (mode == IOMode::IN) {
@@ -36,11 +52,12 @@ void BranchManager::branch(const char* name, T* ptr)
 
   else {
     // this should work in 6.19 even if T is a std::array
-    tree->Branch(name, ptr);
+    do_branch(tree, name, ptr);
   }
 }
 
 // this should be unnecessary in 6.19
+// TODO: Support arrays of scoped enums (using underlying_type)?
 template <typename T, std::size_t N>
 void BranchManager::branch(const char* name, std::array<T, N>* arrptr,
                            const char* len_branch)
@@ -110,7 +127,7 @@ static char DataTypeToChar(EDataType datatype)
   case kOther_t:
   case kNoType_t:
   default:
-    return 0;
+    // return 0;
+    throw std::runtime_error("DataTypeToChar: Unrecognized type");
   }
-  return 0;
 }
