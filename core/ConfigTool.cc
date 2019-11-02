@@ -121,7 +121,7 @@ Config::Config(const char* confFile)
 
 #define BEGIN_CONFIG(confvar) \
   { \
-    const ConfigTool* config__ = confvar
+    const Config* config__ = confvar
 
 #define CONFIG(var) \
   var = config__->get<decltype(var)>(#var)

@@ -23,7 +23,7 @@ public:
   void load(const std::vector<std::string>& inFiles) override;
   Algorithm::Status execute() override;
 
-  bool ready() { return ready_; }
+  bool ready() const { return ready_; }
 
   SyncReader& setMaxEvents(size_t n);
   SyncReader& setReportInterval(size_t n);

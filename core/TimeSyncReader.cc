@@ -11,6 +11,8 @@ class TimeSyncReader : public SyncReader<TreeT> {
 public:
   enum class ClockMode { ClockReader, ClockWriter };
 
+  using SyncReader<TreeT>::SyncReader;
+
   void connect(Pipeline& pipeline) override;
   Algorithm::Status execute() override;
 

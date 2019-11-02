@@ -38,8 +38,13 @@ public:
   virtual Status execute() = 0;
   virtual void finalize(Pipeline& pipeline) { };
   virtual bool isReader() { return false; } // "reader" algs need special treatment
-  virtual int getTag() { return 0; } // for identification
+  virtual int getTag(); // for identification
 };
+
+int Algorithm::getTag()
+{
+  throw std::runtime_error("getTag not implemented for this algorithm");
+}
 
 Algorithm::Status vetoIf(bool cond)
 {

@@ -58,7 +58,7 @@ struct Time : relational::tag {
     return 1e6*(s1 - s2) + 1e-3*(ns1 - ns2);
   }
 
-  Time shifted_us(float diff_us)
+  Time shifted_us(float diff_us) const
   {
     int diff_ns = int(1000 * diff_us);
     bool carry = ns + diff_ns > 1'000'000'000;
