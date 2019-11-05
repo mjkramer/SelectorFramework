@@ -81,7 +81,7 @@ static std::tuple<std::string, std::string>
 split_line(const std::string& line)
 {
   const auto firstWS = line.find_first_of(" \t");
-  const auto key = line.substr(0, firstWS);
+  const auto key = trim(line.substr(0, firstWS));
   const auto val = trim(line.substr(firstWS, line.length() - firstWS));
 
   return {key, val};
@@ -98,10 +98,7 @@ Config::Config(const char* confFile)
 
   std::string line;
 
-  while (true) {
-    getline(ifs, line);
-    if (!ifs.good()) break;
-
+  while (getline(ifs, line)) {
     line = strip_comment(trim(line));
     if (line.empty()) continue;
 
