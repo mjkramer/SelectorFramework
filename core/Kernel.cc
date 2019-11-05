@@ -105,10 +105,13 @@ private:
   template <class Thing, class BaseThing>
   Thing* getThing(PtrVec<BaseThing>& vec, int tag);
 
+  // Make sure outFileMap is declared BEFORE algVec/toolVec etc.
+  // to ensure that files are still open during alg/tool/etc destructors
+  std::map<std::string, std::unique_ptr<TFile>> outFileMap;
+
   PtrVec<Algorithm> algVec;
   std::set<const Algorithm*> runningReaders;
   PtrVec<Tool> toolVec;
-  std::map<std::string, TFile*> outFileMap;
 
   std::vector<std::string> inFilePaths;
   std::map<std::string, TFile*> inFileHandles;
@@ -189,12 +192,12 @@ Tool* Pipeline::getTool(T tag)
 
 void Pipeline::makeOutFile(const char* path, const char* name)
 {
-  outFileMap[name] = new TFile(path, "RECREATE");
+  outFileMap[name] = std::make_unique<TFile>(path, "RECREATE");
 }
 
 TFile* Pipeline::getOutFile(const char* name)
 {
-  return outFileMap[name];
+  return outFileMap[name].get();
 }
 
 size_t Pipeline::inFileCount()
@@ -249,8 +252,6 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
 
 Pipeline::~Pipeline()
 {
-  for (const auto& kv : outFileMap)
-    kv.second->Close();
 }
 
 // -----------------------------------------------------------------------------
