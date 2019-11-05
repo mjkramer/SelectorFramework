@@ -58,6 +58,12 @@ double Config::get<double>(const char* key) const
 }
 
 template <>
+float Config::get<float>(const char* key) const
+{
+  return float(get<double>(key));
+}
+
+template <>
 std::string Config::get<std::string>(const char* key) const
 {
   if (strMap.count(key))

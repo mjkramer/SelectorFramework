@@ -267,7 +267,7 @@ public:
   virtual Algorithm::Status consume(const decltype(ReaderT::data)& data) = 0;
 
 protected:
-  const ReaderT* reader;
+  const ReaderT* reader = nullptr;
 };
 
 template <class ReaderT>
