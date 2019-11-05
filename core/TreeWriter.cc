@@ -39,6 +39,7 @@ void TreeWriter<TreeT>::connect(Pipeline& p, const char* outFileName)
 template <class TreeT>
 TreeWriter<TreeT>::~TreeWriter()
 {
+  mgr.tree->GetDirectory()->cd();
   mgr.tree->Write();
 }
 
