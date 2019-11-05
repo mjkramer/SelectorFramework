@@ -24,6 +24,7 @@ public:
   Algorithm::Status execute() override;
 
   bool ready() const { return ready_; }
+  bool isReader() const override { return true; }
 
   SyncReader& setMaxEvents(size_t n);
   SyncReader& setReportInterval(size_t n);
