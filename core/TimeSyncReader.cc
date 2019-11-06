@@ -53,15 +53,19 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
     fetch = true;
 
   // Event was published on last execution cycle
-  if (this->ready()) {
-    this->ready_ = false;
+  if (this->ready())
     fetch = true;
-  }
 
   if (fetch) {
     auto status = SyncReader<TreeT>::execute();
-    if (status == Algorithm::Status::EndOfFile)
+    if (status == Algorithm::Status::EndOfFile) {
+      prefetching_ = false;
       return status;
+    }
+
+    // Don't publish event until we verify that singles tree is "caught up"
+    // (SyncReader::execute sets ready_ to true)
+    this->ready_ = false;
   }
 
   if (first && prefetch_us) {
@@ -81,8 +85,13 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
   if (clockMode == ClockMode::ClockReader) {
     Time globalTime = clock->current();
 
+    // Global clock is catching up. Start publishing/fetching.
     if (ourTime.diff_us(globalTime) < epsilon_us)
       this->ready_ = true;
+
+    // Global clock is perilously close. Loop till we're sufficiently ahead.
+    if (ourTime.diff_us(globalTime) < epsilon_us / 2)
+      prefetching_ = true;
   }
 
   else {                      // ClockWriter
