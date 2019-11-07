@@ -25,8 +25,8 @@ public:
   TimeSyncReader& setEpsilon_us(float);
 
 private:
-  float epsilon_us;
-  float prefetch_us;
+  float epsilon_us = 0;
+  float prefetch_us = 0;
   bool prefetching_ = false;
   ClockMode clockMode = ClockMode::ClockWriter;
 
@@ -64,6 +64,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
     }
 
     // Don't publish event until we verify that singles tree is "caught up"
+    // which we check in the "if ClockReader" block"
     // (SyncReader::execute sets ready_ to true)
     this->ready_ = false;
   }
@@ -90,7 +91,8 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
       this->ready_ = true;
 
     // Global clock is perilously close. Loop till we're sufficiently ahead.
-    if (ourTime.diff_us(globalTime) < epsilon_us / 2)
+
+    if (prefetch_us && ourTime.diff_us(globalTime) < epsilon_us/2)
       prefetching_ = true;
   }
 
