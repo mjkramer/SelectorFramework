@@ -60,6 +60,8 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
     auto status = SyncReader<TreeT>::execute();
     if (status == Algorithm::Status::EndOfFile) {
       prefetching_ = false;
+      if (clockMode == ClockMode::ClockWriter)
+        clock->signalTheEnd();
       return status;
     }
 
@@ -87,7 +89,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
     Time globalTime = clock->current();
 
     // Global clock is catching up. Start publishing/fetching.
-    if (ourTime.diff_us(globalTime) < epsilon_us)
+    if (ourTime.diff_us(globalTime) < epsilon_us || clock->atTheEnd())
       this->ready_ = true;
 
     // Global clock is perilously close. Loop till we're sufficiently ahead.
