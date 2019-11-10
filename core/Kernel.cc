@@ -25,6 +25,18 @@ public:
 
   virtual ~Node() { };
   virtual void connect(Pipeline& pipeline) { };
+
+  void do_connect(Pipeline& pipeline)
+  {
+    pipe_ = &pipeline;
+    connect(pipeline);
+  }
+
+protected:
+  Pipeline& pipe() const { return *pipe_; }
+
+private:
+  Pipeline* pipe_;
 };
 
 class Tool : public Node {
@@ -221,10 +233,10 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
     alg->load(inFiles);
 
   for (const auto& alg : algVec)
-    alg->connect(*this);
+    alg->do_connect(*this);
 
   for (const auto& tool : toolVec)
-    tool->connect(*this);
+    tool->do_connect(*this);
 
   while (true) {
     for (const auto& alg : algVec) {
