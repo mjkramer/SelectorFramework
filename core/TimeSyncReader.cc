@@ -97,8 +97,10 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
 
     // Global clock is perilously close. Loop till we're sufficiently ahead.
 
-    if (prefetch_us && ourTime.diff_us(globalTime) < epsilon_us/2)
+    if (prefetch_us && ourTime.diff_us(globalTime) < epsilon_us/2) {
       prefetching_ = true;
+      beginTime = timeInTree();
+    }
   }
 
   else {                      // ClockWriter
