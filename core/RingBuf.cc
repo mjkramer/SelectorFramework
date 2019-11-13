@@ -35,6 +35,11 @@ public:
     return RingBufIter<T>(*this, size_);
   }
 
+  bool full() const
+  {
+    return size_ == max_size_;
+  }
+
 private:
   std::unique_ptr<T[]> buf_;
   const size_t max_size_;
