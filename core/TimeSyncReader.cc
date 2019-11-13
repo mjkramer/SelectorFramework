@@ -39,6 +39,9 @@ void TimeSyncReader<TreeT>::connect(Pipeline& pipeline)
 {
   clock = pipeline.getTool<Clock>();
 
+  if (clockMode == ClockMode::ClockWriter)
+    clock->registerWriter(this);
+
   SyncReader<TreeT>::connect(pipeline);
 }
 
@@ -65,7 +68,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
       return status;
     }
 
-    // Don't publish event until we verify that singles tree is "caught up"
+    // Don't publish event until we verify that clock writer is "caught up"
     // which we check in the "if ClockReader" block"
     // (SyncReader::execute sets ready_ to true)
     this->ready_ = false;
