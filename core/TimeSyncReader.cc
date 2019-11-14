@@ -99,7 +99,8 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
 
     if (prefetch_us && ourTime.diff_us(globalTime) < epsilon_us/2) {
       prefetching_ = true;
-      beginTime = timeInTree();
+      // beginTime = timeInTree();
+      beginTime = globalTime;
     }
   }
 
@@ -165,6 +166,9 @@ public:
     do_connect(p);
   }
 
+private:
+  ReaderT* reader;
+
   template <class U = TagT, std::enable_if_t<std::is_same_v<U, void>, int> = 0>
   void do_connect(Pipeline& p)
   {
@@ -176,9 +180,6 @@ public:
   {
     reader = p.getAlg<ReaderT>(this->tag);
   }
-
-private:
-  ReaderT* reader;
 };
 
 // template <class ReaderT, class TagT>
