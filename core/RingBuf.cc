@@ -40,6 +40,16 @@ public:
     return size_ == max_size_;
   }
 
+  size_t size() const
+  {
+    return size_;
+  }
+
+  T& at(size_t i) const
+  {
+    return *RingBufIter<T>(*this, i);
+  }
+
 private:
   std::unique_ptr<T[]> buf_;
   const size_t max_size_;
