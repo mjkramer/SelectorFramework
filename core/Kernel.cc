@@ -92,7 +92,7 @@ public:
   Tool* getTool(T tag);
 
 
-  void makeOutFile(const char* path, const char* name = DefaultFile);
+  TFile* makeOutFile(const char* path, const char* name = DefaultFile, bool reopen=false);
   TFile* getOutFile(const char* name = DefaultFile);
   static constexpr const char* const DefaultFile = "";
 
@@ -202,9 +202,18 @@ Tool* Pipeline::getTool(T tag)
   return getThing<Tool>(toolVec, int(tag));
 }
 
-void Pipeline::makeOutFile(const char* path, const char* name)
+TFile* Pipeline::makeOutFile(const char* path, const char* name, bool reopen)
 {
-  outFileMap[name] = std::make_unique<TFile>(path, "RECREATE");
+  const auto it = outFileMap.find(name);
+  if (it != outFileMap.end()) {
+    if (reopen)
+      outFileMap.erase(it);
+    else
+      throw std::runtime_error(Form("file %s already opened", name));
+  }
+
+  const auto& ptr = outFileMap[name] = std::make_unique<TFile>(path, "RECREATE");
+  return ptr.get();
 }
 
 TFile* Pipeline::getOutFile(const char* name)
