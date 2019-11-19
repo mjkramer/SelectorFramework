@@ -3,5 +3,3 @@
 *.pcm
 BAK/
 *.root
-.local/
-.envrc
