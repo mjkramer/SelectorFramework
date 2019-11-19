@@ -3,7 +3,6 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -77,16 +76,16 @@ public:
 
 
   template <class Thing>
-  using Pred = std::optional<std::function<bool(const Thing&)>>;
+  using Pred = std::function<bool(const Thing&)>;
 
   template <class Alg>
-  Alg* getAlg(Pred<Alg> pred = std::nullopt);
+  Alg* getAlg(Pred<Alg> pred = nullptr);
 
   template <class Alg, class T> // T should be integral
   Alg* getAlg(T tag);
 
   template <class Tool>
-  Tool* getTool(Pred<Tool> pred = std::nullopt);
+  Tool* getTool(Pred<Tool> pred = nullptr);
 
   template <class Tool, class T>
   Tool* getTool(T tag);
@@ -162,7 +161,7 @@ Thing* Pipeline::getThing(PtrVec<BaseThing>& vec, Pred<Thing> pred)
     auto &thing = *pThing;          // https://stackoverflow.com/q/46494928
     if (typeid(thing) == typeid(Thing)) {
       auto castedPtr = dynamic_cast<Thing*>(pThing.get());
-      if (!pred.has_value() || pred.value()(*castedPtr))
+      if (!pred || pred(*castedPtr))
         return castedPtr;
     }
   }
