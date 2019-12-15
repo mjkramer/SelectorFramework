@@ -280,15 +280,19 @@ Pipeline::~Pipeline()
 
 // -----------------------------------------------------------------------------
 
-// SimpleAlg/PureAlg<ReaderT> assume ReaderT { struct {...} data; }
+// SimpleAlg/PureAlg<ReaderT> assume ReaderT { _& getData(); bool ready(); }
+template <class ReaderT>
+using algdata_t = std::decay_t<decltype(((ReaderT*)0)->getData())>;
 
 template <class ReaderT>
+using algfunc_t = Algorithm::Status(const algdata_t<ReaderT> &);
+
 class SimpleAlg : public Algorithm {
 public:
   void connect(Pipeline& pipeline) override;
   Algorithm::Status execute() override;
 
-  virtual Algorithm::Status consume(const decltype(ReaderT::data)& data) = 0;
+  virtual Algorithm::Status consume(const algdata_t<ReaderT>& data) = 0;
 
 protected:
   const ReaderT* reader = nullptr;
@@ -304,7 +308,7 @@ template <class ReaderT>
 Algorithm::Status SimpleAlg<ReaderT>::execute()
 {
   if (reader->ready())
-    return consume(reader->data);
+    return consume(reader->getData());
 
   else return Status::Continue;
 }
@@ -320,7 +324,7 @@ using algfunc_t = Algorithm::Status (const decltype(ReaderT::data)&);
 template <class ReaderT, algfunc_t<ReaderT> func>
 class PureAlg : public SimpleAlg<ReaderT> {
 public:
-  Algorithm::Status consume(const decltype(ReaderT::data)& data) override
+  Algorithm::Status consume(const algdata_t<ReaderT>& data) override
   {
     return func(data);
   };

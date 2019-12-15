@@ -30,6 +30,7 @@ public:
   SyncReader& setReportInterval(size_t n);
 
   TreeT data;
+  const Data& getData() const { return data; }
 
 protected:
   BranchManager mgr;
