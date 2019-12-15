@@ -3,12 +3,16 @@
 #include <algorithm>
 #include <memory>
 
+#include "Util.cc"              // relational
+
 template <typename T>
 class RingBufIter;
 
 template<typename T>
 class RingBuf {
 public:
+  using iter_t = RingBufIter<T>;
+
   explicit RingBuf(size_t size) :
     buf_(new T[size]),
     max_size_(size) { }
@@ -25,14 +29,14 @@ public:
     return *begin();
   }
 
-  RingBufIter<T> begin() const
+  iter_t begin() const
   {
-    return RingBufIter<T>(*this, 0);
+    return iter_t(*this, 0);
   }
 
-  RingBufIter<T> end() const
+  iter_t end() const
   {
-    return RingBufIter<T>(*this, size_);
+    return iter_t(*this, size_);
   }
 
   bool full() const
@@ -47,7 +51,7 @@ public:
 
   T& at(size_t i) const
   {
-    return *RingBufIter<T>(*this, i);
+    return *iter_t(*this, i);
   }
 
 private:
@@ -63,7 +67,7 @@ private:
 // class of a template class. Nesting doesn't work in root 6.12 on cori; does
 // work in 6.16 on dellite.
 template<typename T>
-class RingBufIter {
+class RingBufIter : relational::tag {
 public:
   RingBufIter(const RingBuf<T>& ring, int pos) :
     ring_(ring), pos_(pos) { }
@@ -73,16 +77,31 @@ public:
     return pos_ == rhs.pos_;
   }
 
-  // yes this is necessary
-  bool operator!=(const RingBufIter<T>& rhs) const
+  // // yes this is necessary
+  // bool operator!=(const RingBufIter<T>& rhs) const
+  // {
+  //   return !(*this == rhs);
+  // }
+
+  bool operator<(const RingBufIter<T>& rhs) const
   {
-    return !(*this == rhs);
+    return pos_ < rhs.pos_;
   }
 
   RingBufIter& operator++()
   {
     ++pos_;
     return *this;
+  }
+
+  RingBufIter<T> prev()
+  {
+    return {ring_, pos_ + 1};
+  }
+
+  RingBufIter<T> next()
+  {
+    return {ring_, pos_ - 1};
   }
 
   T& operator*() const
