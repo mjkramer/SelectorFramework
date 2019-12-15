@@ -32,12 +32,19 @@ public:
     connect(pipeline);
   }
 
+  virtual int rawTag() const; // for identification
+
 protected:
   Pipeline& pipe() const { return *pipe_; }
 
 private:
   Pipeline* pipe_;
 };
+
+int Node::rawTag() const
+{
+  throw std::runtime_error("rawTag not implemented for this node");
+}
 
 class Tool : public Node {
 };
@@ -50,13 +57,7 @@ public:
   virtual Status execute() = 0;
   virtual void finalize(Pipeline& pipeline) { };
   virtual bool isReader() const { return false; } // "reader" algs need special treatment
-  virtual int getTag() const; // for identification
 };
-
-int Algorithm::getTag() const
-{
-  throw std::runtime_error("getTag not implemented for this algorithm");
-}
 
 Algorithm::Status vetoIf(bool cond)
 {
@@ -173,7 +174,7 @@ template <class Thing, class BaseThing>
 Thing* Pipeline::getThing(PtrVec<BaseThing>& vec, int tag)
 {
   auto pred = [&](const Thing& thing) {
-    return thing.getTag() == tag;
+    return thing.rawTag() == tag;
   };
   return getThing<Thing, BaseThing>(vec, pred);
 }
@@ -300,6 +301,9 @@ public:
   Algorithm::Status execute() override;
 
   virtual Algorithm::Status consume(const algdata_t<ReaderT>& data) = 0;
+
+  virtual int rawTag() const override { return int(*tag_); }
+  TagT tag() { return *tag_; }
 
 protected:
   const ReaderT* reader = nullptr;

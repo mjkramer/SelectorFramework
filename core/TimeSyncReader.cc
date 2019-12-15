@@ -11,7 +11,21 @@ class TimeSyncReader : public SyncReader<TreeT> {
 public:
   enum class ClockMode { ClockReader, ClockWriter };
 
-  using SyncReader<TreeT>::SyncReader;
+  template <class... DataArgs>
+  TimeSyncReader(std::initializer_list<const char*> chainNames,
+                 bool clockWriter = false,
+                 DataArgs&&... data_args) :
+    SyncReader<TreeT>(chainNames, std::forward<DataArgs>(data_args)...)
+  {
+    if (clockWriter) {
+      setClockMode(ClockMode::ClockWriter);
+    } else {
+      setClockMode(ClockMode::ClockWriter);
+      // Reasonable defaults:
+      setEpsilon_us(2000);
+      setPrefetch_us(2000);
+    }
+  }
 
   void connect(Pipeline& pipeline) override;
   Algorithm::Status execute() override;

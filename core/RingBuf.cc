@@ -10,12 +10,21 @@ class RingBufIter;
 
 template<typename T>
 class RingBuf {
+  static constexpr size_t DEFAULT_SIZE = 1000;
+
 public:
   using iter_t = RingBufIter<T>;
 
-  explicit RingBuf(size_t size) :
-    buf_(new T[size]),
-    max_size_(size) { }
+  explicit RingBuf(size_t N = DEFAULT_SIZE)
+  {
+    resize(N);
+  }
+
+  void resize(size_t N)
+  {
+    buf_ = std::make_unique<T[]>(N);
+    max_size_ = N;
+  }
 
   void put(T item)
   {
@@ -31,12 +40,12 @@ public:
 
   iter_t begin() const
   {
-    return iter_t(*this, 0);
+    return iter_t(this, 0);
   }
 
   iter_t end() const
   {
-    return iter_t(*this, size_);
+    return iter_t(this, size_);
   }
 
   bool full() const
@@ -51,12 +60,12 @@ public:
 
   T& at(size_t i) const
   {
-    return *iter_t(*this, i);
+    return *iter_t(this, i);
   }
 
 private:
   std::unique_ptr<T[]> buf_;
-  const size_t max_size_;
+  size_t max_size_;
   size_t head_ = 0;
   size_t size_ = 0;
 
@@ -69,7 +78,7 @@ private:
 template<typename T>
 class RingBufIter : relational::tag {
 public:
-  RingBufIter(const RingBuf<T>& ring, int pos) :
+  RingBufIter(const RingBuf<T>* ring, size_t pos) :
     ring_(ring), pos_(pos) { }
 
   bool operator==(const RingBufIter<T>& rhs) const
@@ -94,26 +103,36 @@ public:
     return *this;
   }
 
-  RingBufIter<T> prev()
+  RingBufIter<T> earlier()
   {
     return {ring_, pos_ + 1};
   }
 
-  RingBufIter<T> next()
+  RingBufIter<T> later()
   {
     return {ring_, pos_ - 1};
   }
 
+  RingBufIter<T> operator+(int n) const
+  {
+    return {ring_, pos_ + n};
+  }
+
   T& operator*() const
   {
-    int idx = ring_.head_ - pos_ - 1;
+    int idx = ring_->head_ - pos_ - 1;
     if (idx < 0)
-      idx += ring_.max_size_;
+      idx += ring_->max_size_;
 
-    return ring_.buf_[idx];
+    return ring_->buf_[idx];
+  }
+
+  T* operator->() const
+  {
+    return &*(*this);
   }
 
 private:
-  const RingBuf<T>& ring_;
+  const RingBuf<T>* ring_;
   size_t pos_;
 };
