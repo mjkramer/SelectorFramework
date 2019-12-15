@@ -95,7 +95,7 @@ split_line(const std::string& line)
 
 Config::Config(const char* confFile)
 {
-  ifstream ifs(confFile);
+  std::ifstream ifs(confFile);
 
   if (!ifs.is_open() || !ifs.good()) {
     const char* msg = Form("Couldn't open %s", confFile);
