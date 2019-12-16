@@ -236,6 +236,9 @@ TFile* Pipeline::inFile(size_t i)
 
 void Pipeline::process(const std::vector<std::string>& inFiles)
 {
+  if (inFiles.size() > 1)
+    throw std::runtime_error("Need to implement notification of algs when file changes");
+
   inFilePaths = inFiles;
 
   for (const auto& alg : algVec)
