@@ -20,7 +20,7 @@ public:
     if (clockWriter) {
       setClockMode(ClockMode::ClockWriter);
     } else {
-      setClockMode(ClockMode::ClockWriter);
+      setClockMode(ClockMode::ClockReader);
       // Reasonable defaults:
       setEpsilon_us(2000);
       setPrefetch_us(2000);
