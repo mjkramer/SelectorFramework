@@ -55,6 +55,7 @@ public:
 
   virtual void load(const std::vector<std::string>& inFiles) { };
   virtual Status execute() = 0;
+  virtual void postExecute() { };
   virtual void finalize(Pipeline& pipeline) { };
   virtual bool isReader() const { return false; } // "reader" algs need special treatment
 };
@@ -251,16 +252,34 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
   for (const auto& tool : toolVec)
     tool->do_connect(*this);
 
+  Algorithm* lastAlg = nullptr;
+
+  auto isDoneReader = [&](const std::unique_ptr<Algorithm>& alg) {
+    return alg->isReader() && runningReaders.count(alg.get()) == 0;
+  };
+
   while (true) {
     for (const auto& alg : algVec) {
-      if (alg->isReader() && runningReaders.count(alg.get()) == 0)
+      if (isDoneReader(alg))
         continue;
+
+      lastAlg = alg.get();
 
       const auto status = alg->execute();
       if (status == Algorithm::Status::SkipToNext)
         break;
       if (status == Algorithm::Status::EndOfFile)
         runningReaders.erase(alg.get());
+    }
+
+    for (const auto& alg : algVec) {
+      if (isDoneReader(alg))
+        continue;
+
+      alg->postExecute();
+
+      if (alg.get() == lastAlg)
+        break;
     }
 
     if (runningReaders.size() == 0)

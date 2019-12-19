@@ -14,6 +14,7 @@ public:
   using SimpleAlg<ReaderT, TagT>::SimpleAlg;
 
   Algorithm::Status consume(const Data& data) override;
+  void postExecute() override;
 
   void resize(size_t N) { buf_.resize(N); }
 
@@ -37,20 +38,25 @@ private:
 template <class RT, class TagT>
 Algorithm::Status EventBuf<RT, TagT>::consume(const Data &data)
 {
-  if (ready_)                   // released event on last cycle?
-    --pending_;
-
-  ready_ = false;
-
   if (keep()) {
     buf_.put(data);
     ++pending_;
+
+    if (enough()) {
+      ready_ = true;
+    }
   }
 
-  if (enough())
-    ready_ = true;
-
   return Algorithm::Status::Continue;
+}
+
+template <class RT, class TagT>
+void EventBuf<RT, TagT>::postExecute()
+{
+  if (ready_)                   // released event this cycle?
+    --pending_;
+
+  ready_ = false;
 }
 
 // ----------------------------------------------------------------------
