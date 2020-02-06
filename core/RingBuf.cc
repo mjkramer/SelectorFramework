@@ -78,7 +78,7 @@ private:
 template<typename T>
 class RingBufIter : relational::tag {
 public:
-  RingBufIter(const RingBuf<T>* ring, size_t pos) :
+  RingBufIter(const RingBuf<T>* ring = nullptr, size_t pos = 0) :
     ring_(ring), pos_(pos) { }
 
   bool operator==(const RingBufIter<T>& rhs) const
