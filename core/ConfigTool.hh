@@ -27,3 +27,15 @@ private:
 
 #define END_CONFIG()                          \
 }
+
+template <>
+int Config::get<int>(const char* key) const;
+
+template <>
+double Config::get<double>(const char* key) const;
+
+template <>
+float Config::get<float>(const char* key) const;
+
+template <>
+std::string Config::get<std::string>(const char* key) const;
