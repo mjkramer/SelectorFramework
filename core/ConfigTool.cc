@@ -1,37 +1,9 @@
-#pragma once
+#include "ConfigTool.hh"
 
 #include <fstream>
 #include <string>
 #include <tuple>
 #include <stdexcept>
-
-#include "Kernel.cc"
-
-static std::string trim(const std::string& str,
-                        const std::string& whitespace = " \t")
-{
-  const auto strBegin = str.find_first_not_of(whitespace);
-  if (strBegin == std::string::npos)
-    return ""; // no content
-
-  const auto strEnd = str.find_last_not_of(whitespace);
-  const auto strRange = strEnd - strBegin + 1;
-
-  return str.substr(strBegin, strRange);
-}
-
-class Config : public Tool {
-public:
-  Config(const char* confFile);
-
-  template <class T>
-  T get(const char* key) const;
-
-private:
-  std::map<std::string, int> intMap;
-  std::map<std::string, double> floatMap;
-  std::map<std::string, std::string> strMap;
-};
 
 template <>
 int Config::get<int>(const char* key) const
@@ -71,6 +43,19 @@ std::string Config::get<std::string>(const char* key) const
 
   auto msg = Form("Couldn't find str '%s'", key);
   throw std::runtime_error(msg);
+}
+
+static std::string trim(const std::string& str,
+                        const std::string& whitespace = " \t")
+{
+  const auto strBegin = str.find_first_not_of(whitespace);
+  if (strBegin == std::string::npos)
+    return ""; // no content
+
+  const auto strEnd = str.find_last_not_of(whitespace);
+  const auto strRange = strEnd - strBegin + 1;
+
+  return str.substr(strBegin, strRange);
 }
 
 static std::string strip_comment(const std::string& line)
@@ -121,13 +106,3 @@ Config::Config(const char* confFile)
     }
   }
 }
-
-#define BEGIN_CONFIG(confvar) \
-  { \
-    const Config* config__ = confvar
-
-#define CONFIG(var) \
-  var = config__->get<decltype(var)>(#var)
-
-#define END_CONFIG() \
-  }

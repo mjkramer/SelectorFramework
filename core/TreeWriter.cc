@@ -1,25 +1,4 @@
-#pragma once
-
-#include "Kernel.cc"
-#include "BaseIO.cc"
-
-template <class TreeT>          // TreeT <: TreeBase
-class TreeWriter {
-public:
-  TreeWriter(const char* path, const char* title = nullptr);
-  TreeWriter(TreeWriter<TreeT>&& other);
-  TreeWriter(const TreeWriter<TreeT>& other) = delete;
-  ~TreeWriter();
-
-  void connect(Pipeline&p, const char* outFileName = Pipeline::DefaultFile);
-  void fill();
-  TTree* tree() { return mgr.tree; }
-
-  TreeT data;
-
-private:
-  BranchManager mgr;
-};
+#include "TreeWriter.hh"
 
 template <class TreeT>
 TreeWriter<TreeT>::TreeWriter(const char* path, const char* title) :
@@ -52,10 +31,4 @@ TreeWriter<TreeT>::~TreeWriter()
     mgr.tree->GetDirectory()->cd();
     mgr.tree->Write();
   }
-}
-
-template <class TreeT>
-void TreeWriter<TreeT>::fill()
-{
-  mgr.tree->Fill();
 }
