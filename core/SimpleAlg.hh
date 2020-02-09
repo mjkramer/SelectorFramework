@@ -5,6 +5,8 @@
 template <class ReaderT>     // assuming ReaderT { _& getData(); bool ready(); }
 using algdata_t = std::decay_t<decltype(((ReaderT*)0)->getData())>;
 
+// template <class ReaderT>
+// using algfunc_t = std::function<Algorithm::Status (typename ReaderT::Data*)>;
 template <class ReaderT>
 using algfunc_t = Algorithm::Status(const algdata_t<ReaderT> &);
 
@@ -31,4 +33,13 @@ protected:
 private:
   Pred pred_;
   std::optional<TagT> tag_;
+};
+
+template <class ReaderT, algfunc_t<ReaderT> func, class TagT = int>
+class PureAlg : public SimpleAlg<ReaderT, TagT> {
+public:
+  Algorithm::Status consume(const algdata_t<ReaderT>& data) override
+  {
+    return func(data);
+  };
 };

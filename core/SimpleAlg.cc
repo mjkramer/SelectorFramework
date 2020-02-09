@@ -27,17 +27,3 @@ Algorithm::Status SimpleAlg<ReaderT, TagT>::execute()
 
   else return Status::Continue;
 }
-
-// -----------------------------------------------------------------------------
-
-// template <class ReaderT>
-// using algfunc_t = std::function<Algorithm::Status (typename ReaderT::Data*)>;
-
-template <class ReaderT, algfunc_t<ReaderT> func, class TagT = int>
-class PureAlg : public SimpleAlg<ReaderT, TagT> {
-public:
-  Algorithm::Status consume(const algdata_t<ReaderT>& data) override
-  {
-    return func(data);
-  };
-};
