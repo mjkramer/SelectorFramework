@@ -1,5 +1,3 @@
-#pragma once
-
 #include "BaseIO.hh"
 
 #include <TFile.h>
