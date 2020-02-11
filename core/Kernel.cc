@@ -48,8 +48,8 @@ Thing* Pipeline::getThing(PtrVec<BaseThing>& vec, Pred<Thing> pred)
 {
   for (const auto& pThing : vec) {
     auto &thing = *pThing;          // https://stackoverflow.com/q/46494928
-    if (typeid(thing) == typeid(Thing)) {
-      auto castedPtr = dynamic_cast<Thing*>(pThing.get());
+    auto castedPtr = dynamic_cast<Thing*>(pThing.get());
+    if (castedPtr) {
       if (!pred.has_value() || pred.value()(*castedPtr))
         return castedPtr;
     }
