@@ -3,7 +3,6 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <optional>
 #include <stdexcept>
 #include <set>
 #include <string>
@@ -67,16 +66,16 @@ public:
   Tool& makeTool(Args&&... args);
 
   template <class Thing>
-  using Pred = std::optional<std::function<bool(const Thing&)>>;
+  using Pred = std::function<bool(const Thing&)>;
 
   template <class Alg>
-  Alg* getAlg(Pred<Alg> pred = std::nullopt);
+  Alg* getAlg(Pred<Alg> pred = nullptr);
 
   template <class Alg, class T> // T should be integral
   Alg* getAlg(T tag);
 
   template <class Tool>
-  Tool* getTool(Pred<Tool> pred = std::nullopt);
+  Tool* getTool(Pred<Tool> pred = nullptr);
 
   template <class Tool, class T>
   Tool* getTool(T tag);

@@ -50,7 +50,7 @@ Thing* Pipeline::getThing(PtrVec<BaseThing>& vec, Pred<Thing> pred)
     auto &thing = *pThing;          // https://stackoverflow.com/q/46494928
     auto castedPtr = dynamic_cast<Thing*>(pThing.get());
     if (castedPtr) {
-      if (!pred.has_value() || pred.value()(*castedPtr))
+      if (!pred || pred(*castedPtr))
         return castedPtr;
     }
   }
