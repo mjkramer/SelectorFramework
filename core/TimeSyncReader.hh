@@ -43,7 +43,7 @@ private:
   ClockMode clockMode = ClockMode::ClockWriter;
 
   Clock* clock;
-  Time beginTime;
+  Time prefetchStart;
 };
 
 template <class TagT, class Enable = void>

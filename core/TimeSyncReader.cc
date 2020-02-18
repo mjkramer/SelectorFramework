@@ -41,14 +41,14 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
 
   if (first && leadtime_us) {
     prefetching_ = true;
-    beginTime = timeInTree();
+    prefetchStart = timeInTree();
   }
 
   Time ourTime = timeInTree();
 
   if (prefetching()) {
     this->ready_ = true;
-    if (ourTime.diff_us(beginTime) > leadtime_us) {
+    if (ourTime.diff_us(prefetchStart) > leadtime_us) {
       prefetching_ = false;
     }
   }
@@ -64,8 +64,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
 
     if (leadtime_us && ourTime.diff_us(globalTime) < leadtime_us/2) {
       prefetching_ = true;
-      // beginTime = timeInTree();
-      beginTime = globalTime;
+      prefetchStart = globalTime;
     }
   }
 
