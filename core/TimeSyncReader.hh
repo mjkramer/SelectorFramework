@@ -4,28 +4,20 @@
 #include "SyncReader.hh"
 #include "Util.hh"
 
+enum class ClockMode { ClockReader, ClockWriter };
+
 template <class TreeT>          // TreeT <: TreeBase
 class TimeSyncReader : public SyncReader<TreeT> {
   static constexpr float DEFAULT_LEADTIME_US = 2000;
 
 public:
-  enum class ClockMode { ClockReader, ClockWriter };
-
   // being a template ctor, this must be inside the class definition
   template <class... DataArgs>
   TimeSyncReader(std::initializer_list<const char*> chainNames,
-                 bool clockWriter = false,
+                 ClockMode clockMode = ClockMode::ClockReader,
                  DataArgs&&... data_args) :
-    SyncReader<TreeT>(chainNames, std::forward<DataArgs>(data_args)...)
-  {
-    if (clockWriter) {
-      setClockMode(ClockMode::ClockWriter);
-    } else {
-      setClockMode(ClockMode::ClockReader);
-
-      setLeadtime_us(DEFAULT_LEADTIME_US);
-    }
-  }
+    SyncReader<TreeT>(chainNames, std::forward<DataArgs>(data_args)...),
+    clockMode(clockMode) {}
 
   void connect(Pipeline& pipeline) override;
   Algorithm::Status execute() override;
@@ -34,11 +26,10 @@ public:
 
   virtual Time timeInTree() = 0;
 
-  TimeSyncReader& setClockMode(ClockMode);
-  TimeSyncReader& setLeadtime_us(float);
+protected:
+  float leadtime_us = DEFAULT_LEADTIME_US;
 
 private:
-  float leadtime_us = 0;
   bool prefetching_ = false;
   ClockMode clockMode = ClockMode::ClockWriter;
 

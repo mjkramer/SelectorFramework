@@ -75,20 +75,6 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
   return Algorithm::Status::Continue;
 }
 
-template <class TreeT>
-TimeSyncReader<TreeT>& TimeSyncReader<TreeT>::setClockMode(ClockMode mode)
-{
-  clockMode = mode;
-  return *this;
-}
-
-template <class TreeT>
-TimeSyncReader<TreeT>& TimeSyncReader<TreeT>::setLeadtime_us(float us)
-{
-  leadtime_us = us;
-  return *this;
-}
-
 // template <class ReaderT, class TagT>
 // PrefetchLooper<ReaderT>(TagT t) -> PrefetchLooper<ReaderT, TagT>;
 
