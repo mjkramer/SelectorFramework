@@ -9,6 +9,7 @@ enum class ClockMode { ClockReader, ClockWriter };
 template <class TreeT>          // TreeT <: TreeBase
 class TimeSyncReader : public SyncReader<TreeT> {
   static constexpr float DEFAULT_LEADTIME_US = 2000;
+  static constexpr float DEFAULT_GAP_THRESHOLD_US = 10e6;
 
 public:
   // being a template ctor, this must be inside the class definition
@@ -28,6 +29,7 @@ public:
 
 protected:
   float leadtime_us = DEFAULT_LEADTIME_US;
+  float gapThreshold_us = DEFAULT_GAP_THRESHOLD_US;
 
 private:
   bool prefetching_ = false;
@@ -35,6 +37,7 @@ private:
 
   Clock* clock;
   Time prefetchStart;
+  Time prevTime;
 };
 
 template <class TagT, class Enable = void>

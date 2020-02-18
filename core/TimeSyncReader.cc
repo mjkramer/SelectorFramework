@@ -15,63 +15,52 @@ template <class TreeT>
 Algorithm::Status TimeSyncReader<TreeT>::execute()
 {
   const bool first = this->entry == 0;
-  bool fetch = false;
 
-  if (first)
-    fetch = true;
-
-  // Event was published on last execution cycle
-  if (this->ready())
-    fetch = true;
-
-  if (fetch) {
-    auto status = SyncReader<TreeT>::execute();
+  // ready_ implies that event was published on last execution, in which case
+  // we're ready to fetch a new one
+  if (first || this->ready_) {
+    // NB: SyncReader::execute sets ready_ to true
+    const auto status = SyncReader<TreeT>::execute(); // fetch next event
     if (status == Algorithm::Status::EndOfFile) {
       prefetching_ = false;
       if (clockMode == ClockMode::ClockWriter)
         clock->signalTheEnd();
       return status;
     }
-
-    // Don't publish event until we verify that clock writer is "caught up"
-    // which we check in the "if ClockReader" block"
-    // (SyncReader::execute sets ready_ to true)
-    this->ready_ = false;
   }
 
-  if (first && leadtime_us) {
-    prefetching_ = true;
-    prefetchStart = timeInTree();
+  if (clockMode == ClockMode::ClockWriter) {
+    clock->update(timeInTree());
   }
 
-  Time ourTime = timeInTree();
+  else {                        // ClockReader
+    const float dtClock_us = timeInTree().diff_us(clock->current());
+    const float dtPrev_us = timeInTree().diff_us(prevTime);
+    const float dtPrefetch_us = timeInTree().diff_us(prefetchStart);
 
-  if (prefetching_) {
+    const bool foundGap = dtPrev_us > gapThreshold_us;
+    const bool tooFarAhead = dtClock_us > leadtime_us;
+    const bool notFarEnough = dtClock_us < leadtime_us/2;
+
     this->ready_ = true;
-    if (ourTime.diff_us(prefetchStart) > leadtime_us) {
-      prefetching_ = false;
-    }
-  }
 
-  if (clockMode == ClockMode::ClockReader) {
-    Time globalTime = clock->current();
-
-    // Global clock is catching up. Start publishing/fetching.
-    if (ourTime.diff_us(globalTime) < leadtime_us || clock->atTheEnd())
-      this->ready_ = true;
-
-    // Global clock is perilously close. Loop till we're sufficiently ahead.
-    if (leadtime_us && ourTime.diff_us(globalTime) < leadtime_us/2) {
+    if (first || notFarEnough || foundGap) {
       prefetching_ = true;
-      prefetchStart = globalTime;
+      prefetchStart = notFarEnough ? clock->current() : timeInTree();
+    }
+
+    else if (prefetching_) {
+      if (timeInTree().diff_us(prefetchStart) > leadtime_us) {
+        prefetching_ = false;
+      }
+    }
+
+    else if (tooFarAhead) {
+      this->ready_ = false;           // wait for ClockWriter to catch up
     }
   }
 
-  else {                      // ClockWriter
-    clock->update(ourTime);
-    this->ready_ = true;
-  }
-
+  prevTime = timeInTree();
   return Algorithm::Status::Continue;
 }
 
