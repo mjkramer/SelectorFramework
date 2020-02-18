@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Clock.hh"
+#include "PrefetchLooper.hh"
 #include "SyncReader.hh"
 #include "Util.hh"
 
@@ -23,68 +24,19 @@ public:
   void connect(Pipeline& pipeline) override;
   Algorithm::Status execute() override;
 
-  bool prefetching() { return prefetching_; }
-
   virtual Time timeInTree() = 0;
+
+  bool is_prefetching() { return prefetching; };
 
 protected:
   float leadtime_us = DEFAULT_LEADTIME_US;
   float gapThreshold_us = DEFAULT_GAP_THRESHOLD_US;
 
 private:
-  bool prefetching_ = false;
+  bool prefetching = false;
   ClockMode clockMode = ClockMode::ClockWriter;
 
   Clock* clock;
   Time prefetchStart;
   Time prevTime;
-};
-
-template <class TagT, class Enable = void>
-struct PrefetchLooperBase;
-
-template <class TagT>
-struct PrefetchLooperBase<TagT, std::enable_if_t<std::is_same_v<TagT, void>>> {
-};
-
-template <class TagT>
-struct PrefetchLooperBase<TagT, std::enable_if_t<not std::is_same_v<TagT, void>>> {
-  TagT tag;
-};
-
-// Use this to skip over downstream algs while upstream reader is still
-// prefetching (e.g. to delay IBD selection until we've got a buffer of muons)
-template <class ReaderT, class TagT = void>
-class PrefetchLooper : public Algorithm, public PrefetchLooperBase<TagT> {
-public:
-  Algorithm::Status execute() override;
-
-  template <class U = TagT, std::enable_if_t<std::is_same_v<U, void>, int> = 0>
-  PrefetchLooper() {}
-
-  template <class U = TagT, std::enable_if_t<not std::is_same_v<U, void>, int> = 0>
-  PrefetchLooper(U tag)
-  {
-    this->tag = tag;
-  }
-
-  void connect(Pipeline& p) override
-  {
-    do_connect(p);
-  }
-
-private:
-  ReaderT* reader;
-
-  template <class U = TagT, std::enable_if_t<std::is_same_v<U, void>, int> = 0>
-  void do_connect(Pipeline& p)
-  {
-    reader = p.getAlg<ReaderT>();
-  }
-
-  template <class U = TagT, std::enable_if_t<not std::is_same_v<U, void>, int> = 0>
-  void do_connect(Pipeline& p)
-  {
-    reader = p.getAlg<ReaderT>(this->tag);
-  }
 };

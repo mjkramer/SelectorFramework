@@ -22,7 +22,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
     // NB: SyncReader::execute sets ready_ to true
     const auto status = SyncReader<TreeT>::execute(); // fetch next event
     if (status == Algorithm::Status::EndOfFile) {
-      prefetching_ = false;
+      prefetching = false;
       if (clockMode == ClockMode::ClockWriter)
         clock->signalTheEnd();
       return status;
@@ -45,13 +45,13 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
     this->ready_ = true;
 
     if (first || notFarEnough || foundGap) {
-      prefetching_ = true;
+      prefetching = true;
       prefetchStart = notFarEnough ? clock->current() : timeInTree();
     }
 
-    else if (prefetching_) {
-      if (timeInTree().diff_us(prefetchStart) > leadtime_us) {
-        prefetching_ = false;
+    else if (prefetching) {
+      if (dtPrefetch_us > leadtime_us) {
+        prefetching = false;
       }
     }
 
@@ -62,16 +62,4 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
 
   prevTime = timeInTree();
   return Algorithm::Status::Continue;
-}
-
-// template <class ReaderT, class TagT>
-// PrefetchLooper<ReaderT>(TagT t) -> PrefetchLooper<ReaderT, TagT>;
-
-template <class ReaderT, class TagT>
-Algorithm::Status PrefetchLooper<ReaderT, TagT>::execute()
-{
-  if (reader->prefetching())
-    return Status::SkipToNext;
-  else
-    return Status::Continue;
 }
