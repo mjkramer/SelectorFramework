@@ -39,7 +39,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
     this->ready_ = false;
   }
 
-  if (first && prefetch_us) {
+  if (first && leadtime_us) {
     prefetching_ = true;
     beginTime = timeInTree();
   }
@@ -48,7 +48,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
 
   if (prefetching()) {
     this->ready_ = true;
-    if (ourTime.diff_us(beginTime) > prefetch_us) {
+    if (ourTime.diff_us(beginTime) > leadtime_us) {
       prefetching_ = false;
     }
   }
@@ -57,12 +57,12 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
     Time globalTime = clock->current();
 
     // Global clock is catching up. Start publishing/fetching.
-    if (ourTime.diff_us(globalTime) < epsilon_us || clock->atTheEnd())
+    if (ourTime.diff_us(globalTime) < leadtime_us || clock->atTheEnd())
       this->ready_ = true;
 
     // Global clock is perilously close. Loop till we're sufficiently ahead.
 
-    if (prefetch_us && ourTime.diff_us(globalTime) < epsilon_us/2) {
+    if (leadtime_us && ourTime.diff_us(globalTime) < leadtime_us/2) {
       prefetching_ = true;
       // beginTime = timeInTree();
       beginTime = globalTime;
@@ -85,16 +85,9 @@ TimeSyncReader<TreeT>& TimeSyncReader<TreeT>::setClockMode(ClockMode mode)
 }
 
 template <class TreeT>
-TimeSyncReader<TreeT>& TimeSyncReader<TreeT>::setPrefetch_us(float pf_us)
+TimeSyncReader<TreeT>& TimeSyncReader<TreeT>::setLeadtime_us(float us)
 {
-  prefetch_us = pf_us;
-  return *this;
-}
-
-template <class TreeT>
-TimeSyncReader<TreeT>& TimeSyncReader<TreeT>::setEpsilon_us(float eps_us)
-{
-  epsilon_us = eps_us;
+  leadtime_us = us;
   return *this;
 }
 

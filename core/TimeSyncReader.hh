@@ -6,7 +6,7 @@
 
 template <class TreeT>          // TreeT <: TreeBase
 class TimeSyncReader : public SyncReader<TreeT> {
-  static constexpr float DEFAULT_EPSILON_US = 10;
+  static constexpr float DEFAULT_LEADTIME_US = 2000;
 
 public:
   enum class ClockMode { ClockReader, ClockWriter };
@@ -22,9 +22,8 @@ public:
       setClockMode(ClockMode::ClockWriter);
     } else {
       setClockMode(ClockMode::ClockReader);
-      // Reasonable defaults:
-      setEpsilon_us(2000);
-      setPrefetch_us(2000);
+
+      setLeadtime_us(DEFAULT_LEADTIME_US);
     }
   }
 
@@ -36,12 +35,10 @@ public:
   virtual Time timeInTree() = 0;
 
   TimeSyncReader& setClockMode(ClockMode);
-  TimeSyncReader& setPrefetch_us(float);
-  TimeSyncReader& setEpsilon_us(float);
+  TimeSyncReader& setLeadtime_us(float);
 
 private:
-  float epsilon_us = 0;
-  float prefetch_us = 0;
+  float leadtime_us = 0;
   bool prefetching_ = false;
   ClockMode clockMode = ClockMode::ClockWriter;
 
