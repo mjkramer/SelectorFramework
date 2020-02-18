@@ -46,7 +46,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
 
   Time ourTime = timeInTree();
 
-  if (prefetching()) {
+  if (prefetching_) {
     this->ready_ = true;
     if (ourTime.diff_us(prefetchStart) > leadtime_us) {
       prefetching_ = false;
@@ -61,7 +61,6 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
       this->ready_ = true;
 
     // Global clock is perilously close. Loop till we're sufficiently ahead.
-
     if (leadtime_us && ourTime.diff_us(globalTime) < leadtime_us/2) {
       prefetching_ = true;
       prefetchStart = globalTime;
