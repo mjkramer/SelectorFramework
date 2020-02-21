@@ -2,9 +2,11 @@
 
 #include "BaseIO.hh"
 #include "Kernel.hh"
+#include "Util.hh"
 
 #include <TChain.h>
 
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -44,3 +46,46 @@ protected:
   bool ready_ = false;
 };
 
+template <class TreeT>
+void SyncReader<TreeT>::load(const std::vector<std::string>& inFiles)
+{
+  for (size_t i = 0; i < chains.size(); ++i) {
+    util::initChain(*chains[i], inFiles);
+    if (i > 0)
+      chains[0]->AddFriend(chains[i].get());
+  }
+
+  mgr.tree = chains[0].get();
+  data.setManager(&mgr);
+  data.initBranches();
+}
+
+template <class TreeT>
+Algorithm::Status SyncReader<TreeT>::execute()
+{
+  bool proceed = maxEvents == 0 || entry < maxEvents;
+  if (proceed && chains[0]->GetEntry(entry)) {
+    if (reportInterval && entry % reportInterval == 0)
+      std::cout << "---------- Event " << Form("%7zu", entry) << " ----------" << std::endl;
+    ++entry;
+    ready_ = true;
+    return Status::Continue;
+  } else {
+    ready_ = false;
+    return Status::EndOfFile;
+  }
+}
+
+template <class TreeT>
+SyncReader<TreeT>& SyncReader<TreeT>::setMaxEvents(size_t n)
+{
+  maxEvents = n;
+  return *this;
+}
+
+template <class TreeT>
+SyncReader<TreeT>& SyncReader<TreeT>::setReportInterval(size_t n)
+{
+  reportInterval = n;
+  return *this;
+}
