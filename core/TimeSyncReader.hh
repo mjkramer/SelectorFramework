@@ -96,7 +96,7 @@ Algorithm::Status TimeSyncReader<TreeT>::execute()
       }
     }
 
-    else if (tooFarAhead) {
+    else if (tooFarAhead and not clock->atTheEnd()) {
       this->ready_ = false;           // wait for ClockWriter to catch up
     }
   }
