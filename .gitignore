@@ -3,3 +3,4 @@
 *.pcm
 BAK/
 *.root
+__pycache__
