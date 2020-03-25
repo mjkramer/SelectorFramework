@@ -80,7 +80,8 @@ public:
   template <class Tool, class T>
   Tool* getTool(T tag);
 
-  TFile* makeOutFile(const char* path, const char* name = DefaultFile, bool reopen=false);
+  TFile* makeOutFile(const char* path, const char* name = DefaultFile, bool reopen=false,
+                     const char* mode = "RECREATE");
   TFile* getOutFile(const char* name = DefaultFile);
   static constexpr const char* const DefaultFile = "";
 

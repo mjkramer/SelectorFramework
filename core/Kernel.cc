@@ -17,7 +17,8 @@ int Node::rawTag() const
 
 // -----------------------------------------------------------------------------
 
-TFile* Pipeline::makeOutFile(const char* path, const char* name, bool reopen)
+TFile* Pipeline::makeOutFile(const char* path, const char* name, bool reopen,
+                             const char* mode)
 {
   const auto it = outFileMap.find(name);
   if (it != outFileMap.end()) {
