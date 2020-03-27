@@ -4,6 +4,11 @@
 
 struct BranchManager;
 
+// TODO Replace TreeBase with a TreeWrapper<TreeData> where TreeData contains
+// *only* data fields (which we can name without fear of colliding with
+// "setManager" etc.). Overload operator-> on TreeWrapper for convenient access.
+// Specialize TreeWrapper<TreeData>::initBranches() for each TreeData.
+
 class TreeBase {
 public:
   virtual void initBranches() = 0;
@@ -36,6 +41,7 @@ do_branch(TTree* tree, const char* name, T* ptr)
 char DataTypeToChar(EDataType datatype);
 
 // deputy assistant to the regional supervisor
+// TODO Replace with InputBranchManager and OutputBranchManager
 struct BranchManager {
   enum class IOMode { IN, OUT };
 
