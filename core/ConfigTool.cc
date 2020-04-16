@@ -63,7 +63,7 @@ static std::string strip_comment(const std::string& line)
   const auto hash_pt = line.find_first_of('#');
 
   if (hash_pt == std::string::npos)
-    return line;
+    return trim(line);
   else
     return trim(line.substr(0, hash_pt));
 }
