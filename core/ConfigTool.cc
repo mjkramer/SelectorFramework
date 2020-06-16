@@ -6,17 +6,22 @@
 #include <stdexcept>
 
 template <>
-int Config::get<int>(const char* key) const
+int Config::get<int>(const char* key,
+                     std::optional<int> dflt) const
 {
   if (intMap.count(key))
     return intMap.at(key);
+
+  if (dflt)
+    return *dflt;
 
   auto msg = Form("Couldn't find int '%s'", key);
   throw std::runtime_error(msg);
 }
 
 template <>
-double Config::get<double>(const char* key) const
+double Config::get<double>(const char* key,
+                           std::optional<double> dflt) const
 {
   if (floatMap.count(key))
     return floatMap.at(key);
@@ -25,21 +30,29 @@ double Config::get<double>(const char* key) const
   else if (intMap.count(key))
     return intMap.at(key);
 
+  if (dflt)
+    return *dflt;
+
   auto msg = Form("Couldn't find float '%s'", key);
   throw std::runtime_error(msg);
 }
 
 template <>
-float Config::get<float>(const char* key) const
+float Config::get<float>(const char* key,
+                         std::optional<float> dflt) const
 {
-  return float(get<double>(key));
+  return float(get<double>(key, dflt));
 }
 
 template <>
-std::string Config::get<std::string>(const char* key) const
+std::string Config::get<std::string>(const char* key,
+                                     std::optional<std::string> dflt) const
 {
   if (strMap.count(key))
     return strMap.at(key);
+
+  if (dflt)
+    return *dflt;
 
   auto msg = Form("Couldn't find str '%s'", key);
   throw std::runtime_error(msg);

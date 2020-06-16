@@ -1,8 +1,12 @@
 #pragma once
 
+// TODO: Check that each variable has been read before we start the event
+// processing loop. This should help to catch typos in the config files.
+
 #include "Kernel.hh"
 
 #include <map>
+#include <optional>
 #include <string>
 
 class Config : public Tool {
@@ -10,7 +14,7 @@ public:
   Config(const char* confFile);
 
   template <class T>
-  T get(const char* key) const;
+  T get(const char* key, std::optional<T> dflt = std::nullopt) const;
 
 private:
   std::map<std::string, int> intMap;
@@ -29,13 +33,17 @@ private:
 }
 
 template <>
-int Config::get<int>(const char* key) const;
+int Config::get<int>(const char* key,
+                     std::optional<int> dflt) const;
 
 template <>
-double Config::get<double>(const char* key) const;
+double Config::get<double>(const char* key,
+                           std::optional<double> dflt) const;
 
 template <>
-float Config::get<float>(const char* key) const;
+float Config::get<float>(const char* key,
+                         std::optional<float> dflt) const;
 
 template <>
-std::string Config::get<std::string>(const char* key) const;
+std::string Config::get<std::string>(const char* key,
+                                     std::optional<std::string> dflt) const;
