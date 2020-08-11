@@ -10,6 +10,7 @@
 
 #include <TFile.h>
 
+class Algorithm;
 class Pipeline;
 
 
@@ -22,15 +23,19 @@ public:
   virtual ~Node() { };
   virtual void connect(Pipeline& pipeline) { };
 
-  void do_connect(Pipeline& pipeline);
-
   virtual int rawTag() const; // for identification
+
+  virtual void fileChanged(const Algorithm* reader, size_t iFile) {};
 
 protected:
   Pipeline& pipe() const { return *pipe_; }
 
 private:
+  void do_connect(Pipeline& pipeline);
+
   Pipeline* pipe_;
+
+  friend class Pipeline;
 };
 
 // -----------------------------------------------------------------------------
@@ -86,7 +91,10 @@ public:
   static constexpr const char* const DefaultFile = "";
 
   size_t inFileCount();
+  std::string inFilePath(size_t i = 0);
   TFile* inFile(size_t i = 0);
+
+  void notifyFileChanged(const Algorithm* reader, size_t iFile);
 
   void process(const std::vector<std::string>& inFiles);
 
