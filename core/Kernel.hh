@@ -50,7 +50,7 @@ public:
   enum class Status { Continue, SkipToNext, EndOfFile };
 
   virtual void load(const std::vector<std::string>& inFiles) { };
-  virtual Status execute() = 0;
+  virtual Status execute() { return Status::Continue; }
   virtual void postExecute() { };
   virtual void finalize(Pipeline& pipeline) { };
   virtual bool isReader() const { return false; } // "reader" algs need special treatment
