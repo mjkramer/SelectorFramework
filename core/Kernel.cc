@@ -111,10 +111,11 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
       break;
   }
 
-  // For convenience, cd to the default output file
-  if (outFileMap.find(DefaultFile) != outFileMap.end())
-    getOutFile()->cd();
+  for (const auto& alg : algVec) {
+    // For convenience, cd to the default output file
+    if (outFileMap.find(DefaultFile) != outFileMap.end())
+      getOutFile()->cd();
 
-  for (const auto& alg : algVec)
     alg->finalize(*this);
+  }
 }
