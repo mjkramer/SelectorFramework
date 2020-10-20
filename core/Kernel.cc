@@ -42,6 +42,11 @@ size_t Pipeline::inFileCount()
   return inFilePaths.size();
 }
 
+std::string Pipeline::inFilePath(size_t i)
+{
+  return inFilePaths.at(i);
+}
+
 TFile* Pipeline::inFile(size_t i)
 {
   const auto& path = inFilePaths.at(i);
@@ -50,11 +55,17 @@ TFile* Pipeline::inFile(size_t i)
   return inFileHandles[path];
 }
 
+void Pipeline::notifyFileChanged(const Algorithm* reader, size_t i)
+{
+  for (const auto& alg : algVec)
+    alg->fileChanged(reader, i);
+
+  for (const auto& tool : toolVec)
+    tool->fileChanged(reader, i);
+}
+
 void Pipeline::process(const std::vector<std::string>& inFiles)
 {
-  if (inFiles.size() > 1)
-    throw std::runtime_error("Need to implement notification of algs when file changes");
-
   inFilePaths = inFiles;
 
   for (const auto& alg : algVec)

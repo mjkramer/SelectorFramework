@@ -44,6 +44,7 @@ protected:
   size_t maxEvents = 0;
   size_t reportInterval = 0;
   bool ready_ = false;
+  size_t iFile = 0;
 };
 
 template <class TreeT>
@@ -67,6 +68,13 @@ Algorithm::Status SyncReader<TreeT>::execute()
   if (proceed && chains[0]->GetEntry(entry)) {
     if (reportInterval && entry % reportInterval == 0)
       std::cout << "---------- Event " << Form("%7zu", entry) << " ----------" << std::endl;
+
+    size_t current = chains[0]->GetTreeNumber();
+    if (current != iFile) {
+      iFile = current;
+      pipe().notifyFileChanged(this, current);
+    }
+
     ++entry;
     ready_ = true;
     return Status::Continue;
