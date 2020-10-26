@@ -18,7 +18,7 @@ set(SELECTOR_FRAMEWORK_HEADERS
     Util.hh
     )
 
-add_library(SelectorFramework STATIC
+add_library(SelectorFramework SHARED
     core/BaseIO.cc
     core/Clock.cc
     core/ConfigTool.cc
