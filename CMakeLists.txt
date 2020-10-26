@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.15)
 project(SelectorFramework LANGUAGES CXX)
 
 set(SELECTOR_FRAMEWORK_HEADERS
@@ -28,6 +28,11 @@ add_library(SelectorFramework SHARED
 target_include_directories(SelectorFramework PUBLIC core)
 
 ROOT_GENERATE_DICTIONARY(Dict_SelectorFramework "${SELECTOR_FRAMEWORK_HEADERS}" 
-                         MODULE SelectorFramework
+                         MODULE SelectorFramework OPTIONS -interpreteronly
                          )
+
+target_include_directories(SelectorFramework SYSTEM PUBLIC "${ROOT_INCLUDE_DIRS}" )
 target_link_libraries(SelectorFramework PUBLIC ROOT::Core ROOT::Hist ROOT::Tree)
+target_compile_options(SelectorFramework PUBLIC "-Wno-deprecated-volatile")
+
+set_property(TARGET SelectorFramework PROPERTY SELECTOR_HEADERS "${SELECTOR_FRAMEWORK_HEADERS}")
