@@ -33,6 +33,5 @@ ROOT_GENERATE_DICTIONARY(Dict_SelectorFramework "${SELECTOR_FRAMEWORK_HEADERS}"
 
 target_include_directories(SelectorFramework SYSTEM PUBLIC "${ROOT_INCLUDE_DIRS}" )
 target_link_libraries(SelectorFramework PUBLIC ROOT::Core ROOT::Hist ROOT::Tree)
-target_compile_options(SelectorFramework PUBLIC "-Wno-deprecated-volatile")
 
 set_property(TARGET SelectorFramework PROPERTY SELECTOR_HEADERS "${SELECTOR_FRAMEWORK_HEADERS}")
