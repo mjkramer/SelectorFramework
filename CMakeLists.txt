@@ -29,7 +29,6 @@ target_include_directories(SelectorFramework PUBLIC core)
 
 ROOT_GENERATE_DICTIONARY(Dict_SelectorFramework "${SELECTOR_FRAMEWORK_HEADERS}" 
                          MODULE SelectorFramework OPTIONS -interpreteronly
-                         -inlineInputHeader
                          )
 
 target_include_directories(SelectorFramework SYSTEM PUBLIC "${ROOT_INCLUDE_DIRS}" )
