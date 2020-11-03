@@ -122,7 +122,7 @@ private:
   PtrVec<Tool> toolVec;
 
   std::vector<std::string> inFilePaths;
-  std::map<std::string, TFile*> inFileHandles;
+  std::map<std::string, std::unique_ptr<TFile>> inFileHandles;
 };
 
 template <class Thing, class BaseThing, class... Args>
