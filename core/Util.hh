@@ -59,11 +59,21 @@ float Time::diff_us(const Time& other) const
 inline
 Time Time::shifted_us(float diff_us) const
 {
-  int diff_ns = int(1000 * diff_us);
-  bool carry = ns + diff_ns > 1'000'000'000;
-  unsigned int new_s = carry ? s + 1 : s;
-  unsigned int new_ns = carry ? ns + diff_ns - 1'000'000'000 : ns + diff_ns;
-  return { new_s, new_ns };
+  const int delta_s = 1e-6 * diff_us;
+  const int delta_ns = 1e3 * (diff_us - 1e6*delta_s);
+
+  int new_s = s + delta_s;
+  int new_ns = ns + delta_ns;
+
+  if (new_ns > int(1e9)) {
+    new_ns -= int(1e9);
+    new_s += 1;
+  } else if (new_ns < 0) {
+    new_ns += int(1e9);
+    new_s -= 1;
+  }
+
+  return { UInt_t(new_s), UInt_t(new_ns) };
 }
 
 inline
