@@ -62,7 +62,7 @@ Time Time::shifted_us(float diff_us) const
   const int delta_s = 1e-6 * diff_us;
   const int delta_ns = 1e3 * (diff_us - 1e6*delta_s);
 
-  int new_s = s + delta_s;
+  UInt_t new_s = s + delta_s;
   int new_ns = ns + delta_ns;
 
   if (new_ns > int(1e9)) {
@@ -73,7 +73,7 @@ Time Time::shifted_us(float diff_us) const
     new_s -= 1;
   }
 
-  return { UInt_t(new_s), UInt_t(new_ns) };
+  return { new_s, UInt_t(new_ns) };
 }
 
 inline
