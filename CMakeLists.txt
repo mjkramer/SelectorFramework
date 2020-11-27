@@ -35,3 +35,4 @@ target_include_directories(SelectorFramework SYSTEM PUBLIC "${ROOT_INCLUDE_DIRS}
 target_link_libraries(SelectorFramework PUBLIC ROOT::Core ROOT::Hist ROOT::Tree)
 
 set_property(TARGET SelectorFramework PROPERTY SELECTOR_HEADERS "${SELECTOR_FRAMEWORK_HEADERS}")
+install_headers(SelectorFramework)
