@@ -50,9 +50,10 @@ std::string Pipeline::inFilePath(size_t i)
 TFile* Pipeline::inFile(size_t i)
 {
   const auto& path = inFilePaths.at(i);
-  if (!inFileHandles.count(path))
-    inFileHandles[path] = new TFile(path.c_str());
-  return inFileHandles[path];
+  if (!inFileHandles.count(path)) {
+    inFileHandles[path].reset(TFile::Open(path.c_str()));
+  }
+  return inFileHandles[path].get();
 }
 
 void Pipeline::notifyFileChanged(const Algorithm* reader, size_t i)
