@@ -45,7 +45,7 @@ char DataTypeToChar(EDataType datatype);
 struct BranchManager {
   enum class IOMode { IN, OUT };
 
-  BranchManager(IOMode mode) : mode(mode) {}
+  BranchManager(IOMode mode = IOMode::IN) : mode(mode) {}
 
   template <typename T>
   void branch(const char* name, T* ptr);
@@ -54,7 +54,7 @@ struct BranchManager {
   void branch(const char* name, std::array<T, N>* arrptr,
               const char* len_branch = nullptr);
 
-  const IOMode mode;
+  IOMode mode;
   TTree* tree = nullptr;
 };
 

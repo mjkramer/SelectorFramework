@@ -6,10 +6,13 @@
 template <class TreeT>          // TreeT <: TreeBase
 class TreeWriter {
 public:
+  TreeWriter() = default;
   TreeWriter(const char* path, const char* title = nullptr);
   TreeWriter(TreeWriter<TreeT>&& other);
   TreeWriter(const TreeWriter<TreeT>& other) = delete;
   ~TreeWriter();
+
+  TreeWriter& operator=(TreeWriter&& other);
 
   void connect(Pipeline&p, const char* outFileName = Pipeline::DefaultFile);
   void fill();
@@ -46,8 +49,15 @@ TreeWriter<TreeT>::TreeWriter(const char* path, const char* title) :
 template <class TreeT>
 TreeWriter<TreeT>::TreeWriter(TreeWriter<TreeT>&& other)
 {
+  this = std::move(other);
+}
+
+template <class TreeT>
+TreeWriter<TreeT>& TreeWriter<TreeT>::operator=(TreeWriter<TreeT>&& other)
+{
   mgr = other.mgr;
   other.mgr.tree = nullptr;
+  return *this;
 }
 
 template <class TreeT>
