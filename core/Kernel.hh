@@ -17,6 +17,7 @@ class Pipeline;
 class Node {
 public:
   Node() = default;
+  Node(int tag) : rawTag_(tag) {}
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
 
@@ -30,6 +31,8 @@ public:
 protected:
   Pipeline& pipe() const { return *pipe_; }
 
+  int rawTag_ = 0;
+
 private:
   void do_connect(Pipeline& pipeline);
 
@@ -41,6 +44,7 @@ private:
 // -----------------------------------------------------------------------------
 
 class Tool : public Node {
+  using Node::Node;
 };
 
 // -----------------------------------------------------------------------------

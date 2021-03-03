@@ -12,7 +12,7 @@ void Node::do_connect(Pipeline& pipeline)
 
 int Node::rawTag() const
 {
-  throw std::runtime_error("rawTag not implemented for this node");
+  return rawTag_;
 }
 
 // -----------------------------------------------------------------------------
