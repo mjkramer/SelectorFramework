@@ -154,15 +154,24 @@ Tool& Pipeline::makeTool(Args&&... args)
 template <class Thing, class BaseThing>
 Thing* Pipeline::getThing(PtrVec<BaseThing>& vec, Pred<Thing> pred)
 {
+  Thing* result = nullptr;
+
   for (const auto& pThing : vec) {
     auto &thing = *pThing;          // https://stackoverflow.com/q/46494928
     auto castedPtr = dynamic_cast<Thing*>(pThing.get());
-    if (castedPtr) {
-      if (!pred || pred(*castedPtr))
-        return castedPtr;
+    if (castedPtr && (!pred || pred(*castedPtr))) {
+      if (result)
+        throw std::runtime_error(Form("getThing() found multiple matches for %s",
+                                      typeid(Thing).name()));
+      result = castedPtr;
     }
   }
-  throw std::runtime_error(Form("getThing() couldn't find %s", typeid(Thing).name()));
+
+  if (!result)
+    throw std::runtime_error(Form("getThing() couldn't find %s",
+                                  typeid(Thing).name()));
+
+  return result;
 }
 
 template <class Thing, class BaseThing>
