@@ -96,7 +96,14 @@ public:
 
   void notifyFileChanged(const Algorithm* reader, size_t iFile);
 
-  void process(const std::vector<std::string>& inFiles);
+  void connect(const std::vector<std::string>& inFiles);
+  void loop();
+
+  void process(const std::vector<std::string>& inFiles)
+  {
+    connect(inFiles);
+    loop();
+  }
 
   ~Pipeline() {};
 

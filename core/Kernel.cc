@@ -64,7 +64,7 @@ void Pipeline::notifyFileChanged(const Algorithm* reader, size_t i)
     tool->fileChanged(reader, i);
 }
 
-void Pipeline::process(const std::vector<std::string>& inFiles)
+void Pipeline::connect(const std::vector<std::string>& inFiles)
 {
   inFilePaths = inFiles;
 
@@ -76,7 +76,10 @@ void Pipeline::process(const std::vector<std::string>& inFiles)
 
   for (const auto& tool : toolVec)
     tool->do_connect(*this);
+}
 
+void Pipeline::loop()
+{
   Algorithm* lastAlg = nullptr;
 
   auto isDoneReader = [&](const std::unique_ptr<Algorithm>& alg) {
