@@ -29,9 +29,9 @@ public:
 
 protected:
   const ReaderT* reader = nullptr;
+  Pred pred_;
 
 private:
-  Pred pred_;
   std::optional<TagT> tag_;
 };
 

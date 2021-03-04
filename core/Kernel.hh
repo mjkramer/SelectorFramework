@@ -78,16 +78,16 @@ public:
   using Pred = std::function<bool(const Thing&)>;
 
   template <class Alg>
-  Alg* getAlg(Pred<Alg> pred = nullptr);
+  Alg* getAlg(Pred<Alg> pred);
 
-  template <class Alg, class T> // T should be integral
-  Alg* getAlg(T tag);
+  template <class Alg, class T = int> // T should be integral
+  Alg* getAlg(T tag = 0);
 
   template <class Tool>
-  Tool* getTool(Pred<Tool> pred = nullptr);
+  Tool* getTool(Pred<Tool> pred);
 
-  template <class Tool, class T>
-  Tool* getTool(T tag);
+  template <class Tool, class T = int>
+  Tool* getTool(T tag = 0);
 
   TFile* makeOutFile(const char* path, const char* name = DefaultFile, bool reopen=false,
                      const char* mode = "RECREATE");
