@@ -24,15 +24,15 @@ public:
 
   virtual Algorithm::Status consume(const algdata_t<ReaderT>& data) = 0;
 
-  virtual int rawTag() const override { return int(*tag_); }
-  TagT tag() { return *tag_; }
+  virtual int rawTag() const override { return this->tag_ ? static_cast<int>(*tag_): 0; }
+  TagT tag() { return tag_? *tag_: TagT(0); }
 
 protected:
   const ReaderT* reader = nullptr;
   Pred pred_;
 
 private:
-  std::optional<TagT> tag_;
+  std::optional<TagT> tag_ = std::nullopt;
 };
 
 template <class ReaderT, algfunc_t<ReaderT> func, class TagT = int>
