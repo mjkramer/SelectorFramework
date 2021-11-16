@@ -58,6 +58,28 @@ std::string Config::get<std::string>(const char* key,
   throw std::runtime_error(msg);
 }
 
+template <>
+bool Config::get<bool>(const char* key,
+                       std::optional<bool> dflt) const
+{
+  if (strMap.count(key)) {
+    auto &s = strMap.at(key);
+    if (s == "true")
+      return true;
+    if (s == "false")
+      return false;
+    auto msg = Form("%s should be 'true' or 'false', not '%s'",
+                    key, s.c_str());
+    throw std::runtime_error(msg);
+  }
+
+  if (dflt)
+    return *dflt;
+
+  auto msg = Form("Couldn't find bool '%s'", key);
+  throw std::runtime_error(msg);
+}
+
 static std::string trim(const std::string& str,
                         const std::string& whitespace = " \t")
 {

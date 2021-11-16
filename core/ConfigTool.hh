@@ -47,3 +47,6 @@ float Config::get<float>(const char* key,
 template <>
 std::string Config::get<std::string>(const char* key,
                                      std::optional<std::string> dflt) const;
+
+template <>
+bool Config::get<bool>(const char* key, std::optional<bool> dflt) const;
