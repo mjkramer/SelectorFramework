@@ -37,6 +37,8 @@ public:
   TreeT data;
   const Data& getData() const { return data; }
 
+  virtual void postReadCallback() { };
+
 protected:
   BranchManager mgr;
   std::vector<std::unique_ptr<TChain>> chains;
@@ -77,6 +79,7 @@ Algorithm::Status SyncReader<TreeT>::execute()
 
     ++entry;
     ready_ = true;
+    postReadCallback();
     return Status::Continue;
   } else {
     ready_ = false;
