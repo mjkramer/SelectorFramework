@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Strings.hh"
+
+#include <TFile.h>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -7,8 +11,6 @@
 #include <set>
 #include <string>
 #include <vector>
-
-#include <TFile.h>
 
 class Algorithm;
 class Pipeline;
@@ -172,15 +174,15 @@ Thing* Pipeline::getThing(PtrVec<BaseThing>& vec, Pred<Thing> pred)
     auto castedPtr = dynamic_cast<Thing*>(pThing.get());
     if (castedPtr && (!pred || pred(*castedPtr))) {
       if (result)
-        throw std::runtime_error(Form("getThing() found multiple matches for %s",
-                                      typeid(Thing).name()));
+        throw std::runtime_error(TmpStr("getThing() found multiple matches for %s",
+                                        typeid(Thing).name()));
       result = castedPtr;
     }
   }
 
   if (!result)
-    throw std::runtime_error(Form("getThing() couldn't find %s",
-                                  typeid(Thing).name()));
+    throw std::runtime_error(TmpStr("getThing() couldn't find %s",
+                                    typeid(Thing).name()));
 
   return result;
 }

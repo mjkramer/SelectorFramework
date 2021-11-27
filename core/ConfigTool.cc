@@ -15,7 +15,7 @@ int Config::get<int>(const char* key,
   if (dflt)
     return *dflt;
 
-  auto msg = Form("Couldn't find int '%s'", key);
+  auto msg = TmpStr("Couldn't find int '%s'", key);
   throw std::runtime_error(msg);
 }
 
@@ -33,7 +33,7 @@ double Config::get<double>(const char* key,
   if (dflt)
     return *dflt;
 
-  auto msg = Form("Couldn't find float '%s'", key);
+  auto msg = TmpStr("Couldn't find float '%s'", key);
   throw std::runtime_error(msg);
 }
 
@@ -54,7 +54,7 @@ std::string Config::get<std::string>(const char* key,
   if (dflt)
     return *dflt;
 
-  auto msg = Form("Couldn't find str '%s'", key);
+  auto msg = TmpStr("Couldn't find str '%s'", key);
   throw std::runtime_error(msg);
 }
 
@@ -68,7 +68,7 @@ bool Config::get<bool>(const char* key,
       return true;
     if (s == "false")
       return false;
-    auto msg = Form("%s should be 'true' or 'false', not '%s'",
+    auto msg = TmpStr("%s should be 'true' or 'false', not '%s'",
                     key, s.c_str());
     throw std::runtime_error(msg);
   }
@@ -76,7 +76,7 @@ bool Config::get<bool>(const char* key,
   if (dflt)
     return *dflt;
 
-  auto msg = Form("Couldn't find bool '%s'", key);
+  auto msg = TmpStr("Couldn't find bool '%s'", key);
   throw std::runtime_error(msg);
 }
 
@@ -118,7 +118,7 @@ Config::Config(const char* confFile)
   std::ifstream ifs(confFile);
 
   if (!ifs.is_open() || !ifs.good()) {
-    const char* msg = Form("Couldn't open %s", confFile);
+    const char* msg = TmpStr("Couldn't open %s", confFile);
     throw std::runtime_error(msg);
   }
 

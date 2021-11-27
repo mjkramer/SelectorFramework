@@ -69,7 +69,7 @@ Algorithm::Status SyncReader<TreeT>::execute()
   bool proceed = maxEvents == 0 || entry < maxEvents;
   if (proceed && chains[0]->GetEntry(entry)) {
     if (reportInterval && entry % reportInterval == 0)
-      std::cout << "---------- Event " << Form("%7zu", entry) << " ----------" << std::endl;
+      std::cout << "---------- Event " << TmpStr("%7zu", entry) << " ----------" << std::endl;
 
     size_t current = chains[0]->GetTreeNumber();
     if (current != iFile) {

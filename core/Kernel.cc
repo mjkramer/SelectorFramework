@@ -25,7 +25,7 @@ TFile* Pipeline::makeOutFile(const char* path, const char* name, bool reopen,
     if (reopen)
       outFileMap.erase(it);
     else
-      throw std::runtime_error(Form("file %s already opened", name));
+      throw std::runtime_error(TmpStr("file %s already opened", name));
   }
 
   const auto& ptr = outFileMap[name] = std::make_unique<TFile>(path, "RECREATE");

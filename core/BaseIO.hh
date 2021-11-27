@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Kernel.hh"
+
 #include <TTree.h>
 
 struct BranchManager;
@@ -89,8 +91,8 @@ void BranchManager::branch(const char* name, std::array<T, N>* arrptr,
 
     // this logic here (for BR_VARLEN) is one reason we don't want to scrap all
     // of this when 6.19 is out
-    const char* len = len_branch ? len_branch : Form("%lu", N);
-    const char* leaflist = Form("%s[%s]/%c", name, len, typecode);
+    const char* len = len_branch ? len_branch : TmpStr("%lu", N);
+    const char* leaflist = LeakStr("%s[%s]/%c", name, len, typecode);
     tree->Branch(name, arrptr->data(), leaflist);
   }
 }
