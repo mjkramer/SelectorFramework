@@ -12,6 +12,9 @@ void initChain(TChain& chain, const std::vector<std::string>& inFiles);
 template <typename T>
 T clone(const T& parent, const char* name, const char* title = nullptr);
 
+// If arg is '-', read list from stdin; otherwise return {arg}.
+std::vector<std::string> parse_infile_arg(const char* arg);
+
 } // namespace util
 
 // -----------------------------------------------------------------------------
