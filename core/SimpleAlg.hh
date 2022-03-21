@@ -2,6 +2,8 @@
 
 #include "Kernel.hh"
 
+#include <optional>
+
 template <class ReaderT>     // assuming ReaderT { _& getData(); bool ready(); }
 using algdata_t = std::decay_t<decltype(((ReaderT*)0)->getData())>;
 
